@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Repeat, ArrowRight } from 'lucide-react';
+import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Repeat } from 'lucide-react';
 import { parseWorkout } from '../services/ai';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import type { WorkoutPlan, Exercise } from '../types/workout';
 import { useNavigate } from 'react-router-dom';
+
+type ParsedPlanInput = Omit<WorkoutPlan, 'id' | 'currentIndex' | 'createdAt'>;
+type ExerciseFieldValue = Exercise[keyof Exercise];
 
 const PlanBuilder: React.FC = () => {
   const [input, setInput] = useState('');
@@ -16,12 +19,12 @@ const PlanBuilder: React.FC = () => {
     if (!input.trim()) return;
     setLoading(true);
     try {
-      const result = await parseWorkout(input);
+      const result = await parseWorkout(input) as ParsedPlanInput;
       const newPlan: WorkoutPlan = {
         ...result,
         id: crypto.randomUUID(),
         cycleLength: result.days.length,
-        days: result.days.map((day: any, idx: number) => ({
+        days: result.days.map((day, idx: number) => ({
           ...day,
           dayIndex: idx
         })),
@@ -45,7 +48,7 @@ const PlanBuilder: React.FC = () => {
     }
   };
 
-  const updateExercise = (dayIdx: number, exIdx: number, field: keyof Exercise, value: any) => {
+  const updateExercise = (dayIdx: number, exIdx: number, field: keyof Exercise, value: ExerciseFieldValue) => {
     if (!parsed) return;
     const newPlan = { ...parsed };
     const newDays = [...newPlan.days];
@@ -90,8 +93,8 @@ const PlanBuilder: React.FC = () => {
                 <div
                   key={plan.id}
                   className={`bg-white p-6 rounded-[2rem] border transition-all ${activePlanId === plan.id
-                      ? 'border-primary ring-4 ring-primary/5 shadow-md'
-                      : 'border-surface-container-low opacity-70 hover:opacity-100'
+                    ? 'border-primary ring-4 ring-primary/5 shadow-md'
+                    : 'border-surface-container-low opacity-70 hover:opacity-100'
                     }`}
                 >
                   <div className="flex justify-between items-start mb-6">

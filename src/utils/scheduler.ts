@@ -30,7 +30,7 @@ export const calculateStreak = (history: WorkoutHistory[]): number => {
   }
 
   let streak = 0;
-  let currentDate = new Date(sortedDates[0] + 'T00:00:00'); // Use T00:00:00 to avoid TZ shift
+  const currentDate = new Date(sortedDates[0] + 'T00:00:00'); // Use T00:00:00 to avoid TZ shift
 
   for (let i = 0; i < sortedDates.length; i++) {
     const expectedDateStr = getLocalDateString(currentDate);

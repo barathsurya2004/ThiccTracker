@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings, Play, Timer, Dumbbell, Zap } from 'lucide-react';
+import { ArrowLeft, Settings, Play } from 'lucide-react';
 
 const DayView: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const DayView: React.FC = () => {
       {/* Top Navigation Shell */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full border-b border-surface-container-low">
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="text-on-surface-variant hover:opacity-80 transition-opacity p-1"
           >
@@ -52,9 +52,9 @@ const DayView: React.FC = () => {
         <div className="flex items-center gap-4">
           <Settings size={22} className="text-on-surface-variant cursor-pointer" />
           <div className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-white shadow-sm">
-            <img 
-              className="w-full h-full object-cover" 
-              src="https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80&w=100" 
+            <img
+              className="w-full h-full object-cover"
+              src="https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&q=80&w=100"
               alt="Profile"
             />
           </div>
@@ -78,8 +78,8 @@ const DayView: React.FC = () => {
         {/* Exercise List */}
         <section className="space-y-4">
           {exercises.map((ex, i) => (
-            <article 
-              key={i} 
+            <article
+              key={i}
               className="bg-white p-5 rounded-3xl transition-all duration-200 active:scale-[0.98] shadow-sm border border-surface-container-low flex gap-5 hover:border-primary/20"
             >
               <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container shadow-inner">
@@ -108,7 +108,7 @@ const DayView: React.FC = () => {
 
         {/* Bottom Action Button */}
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-40">
-          <button 
+          <button
             onClick={() => navigate('/workout')}
             className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
           >

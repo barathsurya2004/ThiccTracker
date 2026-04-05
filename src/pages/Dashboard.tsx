@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Dumbbell, Flame, TrendingUp, ChevronRight } from 'lucide-react';
+import { Dumbbell, Flame, TrendingUp } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
 import { calculateStreak } from '../utils/scheduler';
@@ -93,11 +93,11 @@ const Dashboard: React.FC = () => {
               <span>More</span>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-20 gap-2">
             {heatmapData.map((val, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`aspect-square rounded-[4px] ${getHeatmapColor(val)} transition-colors`}
               />
             ))}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Play, Timer, Dumbbell, Activity, ArrowLeft } from 'lucide-react';
+import { Play, Dumbbell, ArrowLeft } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
 const ExerciseMode: React.FC = () => {
@@ -16,7 +16,7 @@ const ExerciseMode: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div>
           <h2 className="text-2xl font-black text-primary uppercase italic mb-4">No Workout Selected</h2>
-          <button 
+          <button
             onClick={() => navigate('/plan')}
             className="bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest"
           >
@@ -56,8 +56,8 @@ const ExerciseMode: React.FC = () => {
 
         <section className="space-y-4">
           {currentDay.exercises.map((ex, i) => (
-            <article 
-              key={i} 
+            <article
+              key={i}
               className="bg-white p-5 rounded-3xl transition-all duration-200 active:scale-[0.98] shadow-sm border border-surface-container-low flex gap-5 hover:border-primary/20"
             >
               <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container shadow-inner flex items-center justify-center text-primary/20">
@@ -76,7 +76,7 @@ const ExerciseMode: React.FC = () => {
                   </div>
                   <div className="bg-surface-container-low/50 rounded-xl p-2 text-center border border-white">
                     <span className="block text-[8px] uppercase tracking-widest text-on-surface-variant font-black opacity-50">Rest</span>
-                    <span className="text-sm font-black text-primary">{ex.rest}s</span>
+                    <span className="text-sm font-black text-primary">{ex.setRest}s</span>
                   </div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ const ExerciseMode: React.FC = () => {
 
         {/* Action Button - Leads to Active Session */}
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-40">
-          <button 
+          <button
             onClick={() => navigate('/workout/active')}
             className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
           >

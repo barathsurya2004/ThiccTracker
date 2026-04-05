@@ -1,13 +1,13 @@
 import React from 'react';
-import { ListChecks, Timer, Flame, Heart, Dumbbell, PlusCircle, Coffee, Activity, ChevronRight } from 'lucide-react';
+import { ListChecks, Timer, Flame, Heart, Dumbbell, PlusCircle, Coffee, Activity } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import { useNavigate } from 'react-router-dom';
 import { calculateStreak, getWeeklyActivity } from '../utils/scheduler';
 
 const Home: React.FC = () => {
-  const { plans, activePlanId, startWorkout, skipDay, finishWorkout, history } = useWorkoutStore();
+  const { plans, activePlanId, startWorkout, skipDay, history } = useWorkoutStore();
   const navigate = useNavigate();
-  
+
   const activePlan = plans.find(p => p.id === activePlanId) || null;
   const currentIndex = activePlan?.currentIndex || 0;
   const todayDay = activePlan?.days[currentIndex] || null;
@@ -17,7 +17,7 @@ const Home: React.FC = () => {
 
   const handleStartWorkout = () => {
     if (!activePlan || !todayDay) return;
-    
+
     if (todayDay.type === 'workout') {
       startWorkout();
       navigate('/workout');
@@ -27,21 +27,17 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleCompleteQuick = () => {
-    finishWorkout();
-  };
-
   return (
     <div className="pb-32">
       <main className="px-6 pt-12 max-w-2xl mx-auto space-y-10">
         {/* Today Hero */}
         <section>
           <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary mb-6 italic uppercase">Today</h2>
-          
+
           {activePlan && todayDay ? (
             <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl border border-surface-container-low group transition-all duration-500">
               <div className="absolute inset-0 opacity-[0.03] bg-[url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center group-hover:scale-110 transition-transform duration-700"></div>
-              
+
               <div className="relative p-10 flex flex-col gap-8">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -49,17 +45,16 @@ const Home: React.FC = () => {
                       {activePlan.planName}
                     </span>
                     <span className="w-1 h-1 rounded-full bg-surface-container-highest" />
-                    <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${
-                      todayDay.type === 'rest' ? 'text-blue-500' : todayDay.type === 'cardio' ? 'text-orange-500' : 'text-primary'
-                    }`}>
+                    <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${todayDay.type === 'rest' ? 'text-blue-500' : todayDay.type === 'cardio' ? 'text-orange-500' : 'text-primary'
+                      }`}>
                       {todayDay.type} Day
                     </span>
                   </div>
-                  
+
                   <h3 className="font-headline text-4xl font-black text-on-surface uppercase italic tracking-tighter">
                     {todayDay.name}
                   </h3>
-                  
+
                   <p className="text-on-surface-variant font-bold text-sm opacity-50 uppercase tracking-widest">
                     {todayDay.type === 'rest' ? 'Recovery is part of the process' : `Focus: ${todayDay.focus.join(' • ')}`}
                   </p>
@@ -73,7 +68,7 @@ const Home: React.FC = () => {
                       </div>
                       <p className="text-blue-900 font-bold text-sm leading-tight">Your body needs this time to rebuild and grow stronger.</p>
                     </div>
-                    <button 
+                    <button
                       onClick={skipDay}
                       className="w-full py-6 px-8 rounded-full bg-on-surface text-white font-black text-xl uppercase italic tracking-widest shadow-xl hover:opacity-90 transition-all active:scale-[0.98]"
                     >
@@ -102,12 +97,11 @@ const Home: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={handleStartWorkout}
-                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${
-                        todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'
-                      }`}
+                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'
+                        }`}
                     >
                       Start {todayDay.type === 'cardio' ? 'Cardio' : 'Workout'}
                     </button>
@@ -120,7 +114,7 @@ const Home: React.FC = () => {
               <PlusCircle size={48} className="mx-auto text-primary/20 mb-4" />
               <h3 className="font-headline font-black text-xl text-on-surface uppercase italic mb-2">No Active Plan</h3>
               <p className="text-on-surface-variant text-sm font-medium mb-8 opacity-60">Create a workout plan using AI to get started.</p>
-              <button 
+              <button
                 onClick={() => navigate('/plan')}
                 className="bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest"
               >
@@ -142,11 +136,10 @@ const Home: React.FC = () => {
             <div className="flex justify-between items-center">
               {weeklyActivity.map((day, i) => (
                 <div key={i} className="flex flex-col items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    day.active ? 'bg-primary-container text-primary shadow-inner' : 
-                    day.isToday ? 'border-2 border-primary border-dashed' :
-                    'border-2 border-dashed border-outline-variant/30'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${day.active ? 'bg-primary-container text-primary shadow-inner' :
+                      day.isToday ? 'border-2 border-primary border-dashed' :
+                        'border-2 border-dashed border-outline-variant/30'
+                    }`}>
                     {day.active && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                     {day.isToday && !day.active && <div className="w-2.5 h-2.5 rounded-full bg-primary/20 animate-pulse" />}
                   </div>
@@ -172,13 +165,12 @@ const Home: React.FC = () => {
                 const nextIdx = (currentIndex + offset) % activePlan.days.length;
                 const nextDay = activePlan.days[nextIdx];
                 if (nextIdx === currentIndex && activePlan.days.length === 1) return null;
-                
+
                 return (
                   <div key={nextIdx} className={`min-w-[260px] bg-white rounded-[2rem] p-8 shadow-sm border border-surface-container-low flex flex-col justify-between group hover:border-primary/20 transition-all ${nextDay.type === 'rest' ? 'opacity-60' : ''}`}>
                     <div>
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform ${
-                        nextDay.type === 'rest' ? 'bg-blue-50 text-blue-500' : nextDay.type === 'cardio' ? 'bg-orange-50 text-orange-500' : 'bg-surface-container-low text-primary'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform ${nextDay.type === 'rest' ? 'bg-blue-50 text-blue-500' : nextDay.type === 'cardio' ? 'bg-orange-50 text-orange-500' : 'bg-surface-container-low text-primary'
+                        }`}>
                         {nextDay.type === 'rest' ? <Coffee size={20} /> : nextDay.type === 'cardio' ? <Activity size={20} /> : <Dumbbell size={20} />}
                       </div>
                       <h5 className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tighter mb-2">{nextDay.name}</h5>
@@ -189,9 +181,8 @@ const Home: React.FC = () => {
                     <div className="mt-8 flex items-center justify-between">
                       <div className="flex flex-col">
                         <span className="text-[8px] font-black uppercase text-on-surface-variant opacity-40">Type</span>
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${
-                          nextDay.type === 'rest' ? 'text-blue-500' : nextDay.type === 'cardio' ? 'text-orange-500' : 'text-primary'
-                        }`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${nextDay.type === 'rest' ? 'text-blue-500' : nextDay.type === 'cardio' ? 'text-orange-500' : 'text-primary'
+                          }`}>
                           {nextDay.type}
                         </span>
                       </div>

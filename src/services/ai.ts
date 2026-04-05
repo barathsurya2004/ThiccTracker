@@ -142,7 +142,7 @@ ${input.trim()}`;
     }
 
     return JSON.parse(jsonContent);
-  } catch (e) {
+  } catch {
     console.error('Gemini Raw Content:', content);
     throw new Error('AI returned malformed JSON. Try shortening your input or simplifying the plan.');
   }

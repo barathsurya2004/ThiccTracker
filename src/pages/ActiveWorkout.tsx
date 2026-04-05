@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, FastForward, CheckCircle2, Dumbbell, Timer, Zap, ArrowRight } from 'lucide-react';
+import { X, FastForward, CheckCircle2, Dumbbell, Zap, ArrowRight } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
 type WorkoutUIState = 'performing_set' | 'rest_between_sets' | 'rest_between_exercises';
@@ -8,7 +8,7 @@ type WorkoutUIState = 'performing_set' | 'rest_between_sets' | 'rest_between_exe
 const ActiveWorkout: React.FC = () => {
   const navigate = useNavigate();
   const { plans, activePlanId, currentExerciseIndex, currentSet, nextSet, nextExercise, finishWorkout } = useWorkoutStore();
-  
+
   const activePlan = plans.find(p => p.id === activePlanId);
   const currentIndex = activePlan?.currentIndex ?? 0;
   const currentDay = activePlan?.days[currentIndex];
@@ -19,24 +19,34 @@ const ActiveWorkout: React.FC = () => {
   const [uiState, setUiState] = useState<WorkoutUIState>('performing_set');
   const [timeLeft, setTimeLeft] = useState(0);
 
-  useEffect(() => {
-    let timer: number;
-    if ((uiState === 'rest_between_sets' || uiState === 'rest_between_exercises') && timeLeft > 0) {
-      timer = window.setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-    } else if (timeLeft === 0 && uiState !== 'performing_set') {
-      handleTimerEnd();
-    }
-    return () => clearInterval(timer);
-  }, [uiState, timeLeft]);
-
-  const handleTimerEnd = () => {
+  const handleTimerEnd = useCallback(() => {
     if (uiState === 'rest_between_sets') {
       nextSet();
     } else if (uiState === 'rest_between_exercises') {
       nextExercise();
     }
     setUiState('performing_set');
-  };
+  }, [uiState, nextSet, nextExercise]);
+
+  useEffect(() => {
+    if (uiState === 'performing_set' || timeLeft <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(timer);
+          handleTimerEnd();
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [uiState, timeLeft, handleTimerEnd]);
 
   const handleCompleteSet = () => {
     if (!currentExercise) return;
@@ -79,12 +89,12 @@ const ActiveWorkout: React.FC = () => {
       </header>
 
       <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-20 pb-32 max-w-lg mx-auto">
-        
+
         {/* Focus Area */}
         <div className="text-center w-full mb-12">
           <span className="text-on-surface-variant font-black tracking-[0.2em] uppercase text-[10px] mb-4 block opacity-60">
-            {uiState === 'performing_set' ? `Exercise ${currentExerciseIndex + 1} / ${currentDay.exercises.length}` : 
-             uiState === 'rest_between_sets' ? 'Recovery: Next Set' : 'Recovery: Next Exercise'}
+            {uiState === 'performing_set' ? `Exercise ${currentExerciseIndex + 1} / ${currentDay.exercises.length}` :
+              uiState === 'rest_between_sets' ? 'Recovery: Next Set' : 'Recovery: Next Exercise'}
           </span>
           <h2 className="font-headline text-5xl font-black tracking-tighter text-primary mb-3 uppercase italic leading-none">
             {uiState === 'rest_between_exercises' ? nextExerciseData?.name : currentExercise.name}
@@ -105,13 +115,13 @@ const ActiveWorkout: React.FC = () => {
           <div className={`absolute inset-0 bg-primary/20 blur-[60px] rounded-full transition-all duration-1000 ${uiState !== 'performing_set' ? 'opacity-40 scale-110 animate-pulse' : 'opacity-10 scale-90'}`}></div>
           <svg className="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
             <circle className="text-surface-container-highest opacity-30" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" strokeWidth="4" />
-            <circle 
-              className="text-primary transition-all duration-300 ease-linear" 
-              cx="50" cy="50" fill="transparent" r="44" 
-              stroke="currentColor" strokeWidth="4" 
-              strokeDasharray="276.46" 
+            <circle
+              className="text-primary transition-all duration-300 ease-linear"
+              cx="50" cy="50" fill="transparent" r="44"
+              stroke="currentColor" strokeWidth="4"
+              strokeDasharray="276.46"
               strokeDashoffset={uiState !== 'performing_set' ? progress : 0}
-              strokeLinecap="round" 
+              strokeLinecap="round"
             />
           </svg>
           <div className="relative flex flex-col items-center">
@@ -168,7 +178,7 @@ const ActiveWorkout: React.FC = () => {
         {/* Bottom Action */}
         <div className="fixed bottom-10 left-0 right-0 px-8 flex justify-center w-full z-40">
           {uiState === 'performing_set' ? (
-            <button 
+            <button
               onClick={handleCompleteSet}
               className="w-full max-w-md bg-primary text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-3"
             >
@@ -176,7 +186,7 @@ const ActiveWorkout: React.FC = () => {
               Complete Set {currentSet}
             </button>
           ) : (
-            <button 
+            <button
               onClick={handleSkipRest}
               className="w-full max-w-md bg-on-surface text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl transition-all active:scale-95 uppercase tracking-widest"
             >
