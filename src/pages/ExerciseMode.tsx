@@ -5,13 +5,16 @@ import { useWorkoutStore } from '../store/useWorkoutStore';
 
 const ExerciseMode: React.FC = () => {
   const navigate = useNavigate();
-  const { plans, activePlanId } = useWorkoutStore();
+  const { plans, activePlanId, quickWorkoutDay, quickWorkoutPlanName } = useWorkoutStore();
 
   const activePlan = plans.find(p => p.id === activePlanId);
   const currentIndex = activePlan?.currentIndex ?? 0;
-  const currentDay = activePlan?.days[currentIndex];
+  const currentDay = quickWorkoutDay ?? activePlan?.days[currentIndex];
+  const displayPlanName = quickWorkoutDay ? (quickWorkoutPlanName || 'Quick Workout') : activePlan?.planName;
   const firstExercise = currentDay?.exercises[0];
-  const exerciseProgress = currentDay ? Math.min(((currentIndex + 1) / Math.max(activePlan?.days.length ?? 1, 1)) * 100, 100) : 0;
+  const exerciseProgress = currentDay
+    ? (quickWorkoutDay ? 100 : Math.min(((currentIndex + 1) / Math.max(activePlan?.days.length ?? 1, 1)) * 100, 100))
+    : 0;
 
   if (!currentDay) {
     return (
@@ -36,10 +39,10 @@ const ExerciseMode: React.FC = () => {
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant opacity-40 block mb-1">Workout guide</span>
-              <h2 className="font-headline text-xl font-black uppercase italic tracking-tight text-primary">Ready to train</h2>
+              <h2 className="font-headline text-xl font-black uppercase italic tracking-tight text-primary">{displayPlanName || 'Ready to train'}</h2>
             </div>
             <div className="rounded-full bg-primary-container/70 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">
-              Step 1 of 3
+              {quickWorkoutDay ? 'Quick mode' : 'Step 1 of 3'}
             </div>
           </div>
 

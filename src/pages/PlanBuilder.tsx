@@ -1,18 +1,33 @@
 import React, { useState } from 'react';
-import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Repeat } from 'lucide-react';
+import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Activity, Coffee, User } from 'lucide-react';
 import { parseWorkout } from '../services/ai';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import type { WorkoutPlan, Exercise } from '../types/workout';
 import { useNavigate } from 'react-router-dom';
+import type { DayType, ExerciseLoadType } from '../types/workout';
 
 type ParsedPlanInput = Omit<WorkoutPlan, 'id' | 'currentIndex' | 'createdAt'>;
 type ExerciseFieldValue = Exercise[keyof Exercise];
+
+const inferExerciseType = (exerciseName: string, dayType: DayType): ExerciseLoadType => {
+  const name = exerciseName.toLowerCase();
+
+  if (dayType === 'cardio') return 'cardio';
+
+  const cardioKeywords = ['run', 'jog', 'cycle', 'bike', 'walk', 'row', 'elliptical', 'jump rope', 'sprint', 'cardio'];
+  if (cardioKeywords.some((keyword) => name.includes(keyword))) return 'cardio';
+
+  const bodyweightKeywords = ['push-up', 'push up', 'pull-up', 'pull up', 'dip', 'plank', 'burpee', 'sit-up', 'sit up', 'crunch', 'mountain climber'];
+  if (bodyweightKeywords.some((keyword) => name.includes(keyword))) return 'bodyweight';
+
+  return 'weighted';
+};
 
 const PlanBuilder: React.FC = () => {
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
-  const { plans, activePlanId, addPlan, deletePlan, setActivePlan } = useWorkoutStore();
+  const { plans, activePlanId, addPlan, deletePlan, setActivePlan, startQuickWorkout } = useWorkoutStore();
   const navigate = useNavigate();
 
   const handleParse = async () => {
@@ -20,14 +35,20 @@ const PlanBuilder: React.FC = () => {
     setLoading(true);
     try {
       const result = await parseWorkout(input) as ParsedPlanInput;
+      const normalizedDays = result.days.map((day, idx: number) => ({
+        ...day,
+        dayIndex: idx,
+        exercises: day.exercises.map((exercise) => ({
+          ...exercise,
+          exerciseType: exercise.exerciseType ?? inferExerciseType(exercise.name, day.type),
+        })),
+      }));
+
       const newPlan: WorkoutPlan = {
         ...result,
         id: crypto.randomUUID(),
-        cycleLength: result.days.length,
-        days: result.days.map((day, idx: number) => ({
-          ...day,
-          dayIndex: idx
-        })),
+        cycleLength: normalizedDays.length,
+        days: normalizedDays,
         currentIndex: 0,
         createdAt: new Date().toISOString(),
       };
@@ -46,6 +67,13 @@ const PlanBuilder: React.FC = () => {
       setParsed(null);
       setInput('');
     }
+  };
+
+  const handleQuickWorkout = () => {
+    if (!parsed || parsed.days.length !== 1) return;
+
+    startQuickWorkout(parsed);
+    navigate('/workout/active');
   };
 
   const updateExercise = (dayIdx: number, exIdx: number, field: keyof Exercise, value: ExerciseFieldValue) => {
@@ -72,6 +100,89 @@ const PlanBuilder: React.FC = () => {
     newDays[dayIdx] = newDay;
     newPlan.days = newDays;
     setParsed(newPlan);
+  };
+
+  const getDayVisual = (type: WorkoutPlan['days'][number]['type']) => {
+    if (type === 'cardio') {
+      return {
+        shell: 'border-orange-200 bg-gradient-to-br from-orange-100/70 via-white to-orange-50/80',
+        badge: 'bg-orange-500 text-white',
+        iconWrap: 'bg-orange-100 text-orange-600',
+        label: 'Cardio day',
+        icon: <Activity size={16} />,
+      };
+    }
+
+    if (type === 'rest') {
+      return {
+        shell: 'border-blue-200 bg-gradient-to-br from-blue-100/70 via-white to-blue-50/80',
+        badge: 'bg-blue-500 text-white',
+        iconWrap: 'bg-blue-100 text-blue-600',
+        label: 'Recovery day',
+        icon: <Coffee size={16} />,
+      };
+    }
+
+    return {
+      shell: 'border-primary/15 bg-gradient-to-br from-primary/12 via-white to-primary/5',
+      badge: 'bg-primary text-white',
+      iconWrap: 'bg-primary-container/60 text-primary',
+      label: 'Workout day',
+      icon: <Dumbbell size={16} />,
+    };
+  };
+
+  const getExerciseVisual = (type: WorkoutPlan['days'][number]['type']) => {
+    if (type === 'cardio') {
+      return {
+        shell: 'border-orange-200 bg-gradient-to-br from-orange-50 via-white to-orange-50/60',
+        iconWrap: 'bg-orange-100 text-orange-600',
+        icon: <Activity size={20} />,
+      };
+    }
+
+    if (type === 'rest') {
+      return {
+        shell: 'border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50/60',
+        iconWrap: 'bg-blue-100 text-blue-600',
+        icon: <Coffee size={20} />,
+      };
+    }
+
+    return {
+      shell: 'border-surface-container-low bg-white',
+      iconWrap: 'bg-primary-container/40 text-primary',
+      icon: <Dumbbell size={20} />,
+    };
+  };
+
+  const getExerciseTypeVisual = (exerciseType: ExerciseLoadType | undefined, dayType: DayType) => {
+    const resolvedType = exerciseType ?? inferExerciseType('default', dayType);
+
+    if (resolvedType === 'cardio') {
+      return {
+        iconWrap: 'bg-orange-100 text-orange-600',
+        icon: <Activity size={20} />,
+        badge: 'bg-orange-500/15 text-orange-700 border-orange-200',
+        label: 'Cardio',
+      };
+    }
+
+    if (resolvedType === 'bodyweight') {
+      return {
+        iconWrap: 'bg-emerald-100 text-emerald-700',
+        icon: <User size={20} />,
+        badge: 'bg-emerald-500/15 text-emerald-700 border-emerald-200',
+        label: 'Bodyweight',
+      };
+    }
+
+    return {
+      iconWrap: 'bg-primary-container/40 text-primary',
+      icon: <Dumbbell size={20} />,
+      badge: 'bg-primary/10 text-primary border-primary/20',
+      label: 'Weighted',
+    };
   };
 
   return (
@@ -101,7 +212,7 @@ const PlanBuilder: React.FC = () => {
                     <div>
                       <h3 className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tighter mb-1">{plan.planName}</h3>
                       <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">
-                        {plan.days.length} Day Cycle • Progress: Day {plan.currentIndex + 1}
+                        {plan.days.length} Day Cycle{plan.days.length > 1 ? ` • Progress: Day ${plan.currentIndex + 1}` : ''}
                       </p>
                     </div>
                     <button
@@ -205,15 +316,35 @@ const PlanBuilder: React.FC = () => {
                 <Plus size={18} />
                 Save to My Plans
               </button>
+
+              {parsed.days.length === 1 && (
+                <button
+                  onClick={handleQuickWorkout}
+                  className="bg-white text-primary px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 border border-primary/15 shadow-sm hover:bg-primary-container/30 active:scale-95 transition-all"
+                >
+                  <PlayCircle size={18} />
+                  Quick Workout (No Save)
+                </button>
+              )}
             </div>
 
             <div className="space-y-8">
               {parsed.days.map((day, dIdx) => (
-                <div key={dIdx} className="space-y-5 rounded-[2.25rem] border border-surface-container-low bg-white/80 p-6 shadow-sm">
+                <div
+                  key={dIdx}
+                  className={`space-y-5 rounded-[2.25rem] border p-6 shadow-sm transition-all ${getDayVisual(day.type).shell}`}
+                >
                   <div className="flex items-center gap-4 px-1">
-                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm italic shadow-sm">
-                      D{dIdx + 1}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${getDayVisual(day.type).iconWrap}`}>
+                      {getDayVisual(day.type).icon}
                     </div>
+
+                    {parsed.days.length > 1 && (
+                      <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm italic shadow-sm">
+                        D{dIdx + 1}
+                      </div>
+                    )}
+
                     <input
                       type="text"
                       value={day.name}
@@ -224,15 +355,19 @@ const PlanBuilder: React.FC = () => {
                       }}
                       className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tight bg-transparent border-none p-0 focus:ring-0 flex-1"
                     />
+
                   </div>
 
                   <div className="space-y-4">
                     {day.exercises.map((ex, eIdx) => (
-                      <div key={eIdx} className="bg-white p-5 rounded-[1.75rem] border border-surface-container-low shadow-sm flex flex-col gap-5 group hover:border-primary/20 transition-all">
+                      <div
+                        key={eIdx}
+                        className={`p-5 rounded-[1.75rem] border shadow-sm flex flex-col gap-5 group transition-all ${getExerciseVisual(day.type).shell}`}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
-                            <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary shadow-inner">
-                              <Dumbbell size={20} />
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-inner ${getExerciseTypeVisual(ex.exerciseType, day.type).iconWrap}`}>
+                              {getExerciseTypeVisual(ex.exerciseType, day.type).icon}
                             </div>
                             <input
                               type="text"
@@ -241,12 +376,15 @@ const PlanBuilder: React.FC = () => {
                               className="font-headline font-bold text-base text-on-surface uppercase tracking-tight bg-transparent border-none p-0 focus:ring-0 w-full"
                             />
                           </div>
-                          <button
-                            onClick={() => deleteExercise(dIdx, eIdx)}
-                            className="text-on-surface-variant/20 hover:text-red-500 transition-colors p-2"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex items-center gap-2">
+
+                            <button
+                              onClick={() => deleteExercise(dIdx, eIdx)}
+                              className="text-on-surface-variant/20 hover:text-red-500 transition-colors p-2"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -263,7 +401,7 @@ const PlanBuilder: React.FC = () => {
                           </div>
                           <div className="bg-background rounded-2xl p-3 flex flex-col gap-1 border border-surface-container-low">
                             <label className="flex items-center gap-1.5 text-[8px] font-black uppercase text-on-surface-variant opacity-40">
-                              <Repeat size={10} /> Reps
+                              <User size={10} /> Reps
                             </label>
                             <input
                               type="text"
@@ -306,6 +444,7 @@ const PlanBuilder: React.FC = () => {
                           reps: '10',
                           setRest: 60,
                           exerciseRest: 60,
+                          exerciseType: day.type === 'cardio' ? 'cardio' : 'weighted',
                           muscleGroup: ['Misc'],
                           secondaryMuscles: [],
                           intensity: 'medium',

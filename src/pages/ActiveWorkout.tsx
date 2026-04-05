@@ -7,11 +7,11 @@ type WorkoutUIState = 'performing_set' | 'rest_between_sets' | 'rest_between_exe
 
 const ActiveWorkout: React.FC = () => {
   const navigate = useNavigate();
-  const { plans, activePlanId, currentExerciseIndex, currentSet, nextSet, nextExercise, finishWorkout } = useWorkoutStore();
+  const { plans, activePlanId, quickWorkoutDay, currentExerciseIndex, currentSet, nextSet, nextExercise, finishWorkout } = useWorkoutStore();
 
   const activePlan = plans.find(p => p.id === activePlanId);
   const currentIndex = activePlan?.currentIndex ?? 0;
-  const currentDay = activePlan?.days[currentIndex];
+  const currentDay = quickWorkoutDay ?? activePlan?.days[currentIndex];
   const currentExercise = currentDay?.exercises[currentExerciseIndex];
   const nextExerciseData = currentDay?.exercises[currentExerciseIndex + 1];
 

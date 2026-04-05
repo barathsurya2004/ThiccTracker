@@ -44,6 +44,7 @@ OUTPUT FORMAT
           "reps": number,
           "setRest": number,
           "exerciseRest": number,
+          "exerciseType": "bodyweight" | "weighted" | "cardio",
           "muscleGroup": string[],
           "secondaryMuscles": string[],
           "type": "compound" | "isolation",
@@ -59,7 +60,7 @@ GLOBAL RULES
 - cycleLength = total number of days.
 - Maintain day order with dayIndex starting from 0.
 - Always include all fields.
-
+Make sure this is always consistant and true to the nature of the excercises. For example, running should be cardio with leg focus, while bench press should be workout with chest focus.
 DAY TYPE DETECTION
 - If day contains rest -> type = rest.
 - If day contains cardio activities (running, cycling, walking, etc.) -> type = cardio.
@@ -75,6 +76,7 @@ CARDIO DAY RULES
 - Convert durations to seconds.
 - Use sets = 1, reps = duration in seconds, setRest = 0, exerciseRest = 0.
 - Intensity mapping: easy -> low, moderate -> medium, fast/hard -> high.
+- Set exerciseType = cardio.
 
 REST DAY RULES
 - exercises = []
@@ -99,6 +101,13 @@ EXERCISE TYPE
 - compound for multi-joint movements.
 - isolation for single-muscle movements.
 
+EXERCISE LOAD TYPE
+- Set exerciseType to one of: bodyweight, weighted, cardio.
+- cardio: running, cycling, rowing, walking, jump rope, HIIT cardio, machine cardio.
+- bodyweight: push-ups, pull-ups, dips, squats without load, planks, crunches, burpees, lunges without load.
+- weighted: barbell, dumbbell, kettlebell, cable, machine resistance, smith machine, loaded carries.
+- If ambiguous in workout days, default to weighted unless clearly bodyweight.
+
 INTENSITY RULES
 - 1-6 reps -> high.
 - 7-12 reps -> medium.
@@ -112,6 +121,7 @@ VALIDATION RULES
 - No missing fields.
 - All number fields are valid integers.
 - Rest values are in seconds.
+- Every exercise must include exerciseType.
 
 FINAL INSTRUCTION
 Return ONLY valid JSON. No comments. No markdown.

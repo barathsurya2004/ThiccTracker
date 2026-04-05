@@ -1,5 +1,6 @@
 export type Intensity = 'low' | 'medium' | 'high';
 export type ExerciseType = 'compound' | 'isolation';
+export type ExerciseLoadType = 'bodyweight' | 'weighted' | 'cardio';
 export type DayType = 'workout' | 'rest' | 'cardio';
 
 export interface Exercise {
@@ -10,6 +11,7 @@ export interface Exercise {
   reps: number | string;
   setRest: number;      // Rest between sets of the same exercise
   exerciseRest: number; // Rest after the final set of this exercise
+  exerciseType?: ExerciseLoadType;
   intensity: Intensity;
   type: ExerciseType;
 }
@@ -42,4 +44,13 @@ export interface WorkoutHistory {
   exercises: Exercise[];
   completed: boolean;
   muscleFocus: string[];
+}
+
+export interface CompletedWorkoutSyncPayload {
+  sessionId: string;
+  completedAt: string;
+  source: 'saved-plan' | 'quick-workout';
+  historyEntry: WorkoutHistory;
+  fullPlan: WorkoutPlan;
+  completedDay: WorkoutDay;
 }
