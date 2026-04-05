@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { calculateStreak, getWeeklyActivity } from '../utils/scheduler';
 
 const Home: React.FC = () => {
-  const { plans, activePlanId, startWorkout, skipDay, history } = useWorkoutStore();
+  const { plans, activePlanId, startWorkout, skipDay, history, currentExerciseIndex, currentSet } = useWorkoutStore();
   const navigate = useNavigate();
 
   const activePlan = plans.find(p => p.id === activePlanId) || null;
@@ -21,21 +21,18 @@ const Home: React.FC = () => {
         badge: 'bg-primary text-white',
         tint: 'bg-primary-container/55 text-primary',
         accent: 'text-primary',
-        note: 'Strength day',
       },
       cardio: {
         shell: 'border-orange-200 bg-gradient-to-br from-orange-100/70 via-white to-orange-50/80',
         badge: 'bg-orange-500 text-white',
         tint: 'bg-orange-100/90 text-orange-600',
         accent: 'text-orange-500',
-        note: 'Cardio day',
       },
       rest: {
         shell: 'border-blue-200 bg-gradient-to-br from-blue-100/70 via-white to-blue-50/80',
         badge: 'bg-blue-500 text-white',
         tint: 'bg-blue-100/90 text-blue-600',
         accent: 'text-blue-500',
-        note: 'Recovery day',
       },
     }[todayDay.type]
     : null;
@@ -43,14 +40,22 @@ const Home: React.FC = () => {
   const handleStartWorkout = () => {
     if (!activePlan || !todayDay) return;
 
+    const hasInProgressSession = currentExerciseIndex > 0 || currentSet > 1;
+
     if (todayDay.type === 'workout') {
-      startWorkout();
+      if (!hasInProgressSession) {
+        startWorkout();
+      }
       navigate('/workout');
     } else if (todayDay.type === 'cardio') {
-      startWorkout();
+      if (!hasInProgressSession) {
+        startWorkout();
+      }
       navigate('/workout');
     }
   };
+
+  const hasInProgressSession = currentExerciseIndex > 0 || currentSet > 1;
 
   return (
     <div className="pb-32">
@@ -90,9 +95,6 @@ const Home: React.FC = () => {
                         {todayDay.name}
                       </h3>
                     </div>
-                    <span className={`inline-flex shrink-0 items-center rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${todayTheme?.badge ?? 'bg-primary text-white'}`}>
-                      {todayTheme?.note ?? todayDay.type}
-                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -156,7 +158,7 @@ const Home: React.FC = () => {
                       onClick={handleStartWorkout}
                       className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'}`}
                     >
-                      Start {todayDay.type === 'cardio' ? 'Cardio' : 'Workout'}
+                      {hasInProgressSession ? 'Resume Workout' : `Start ${todayDay.type === 'cardio' ? 'Cardio' : 'Workout'}`}
                     </button>
                   </>
                 )}
