@@ -28,7 +28,7 @@ const ExerciseMode: React.FC = () => {
   }
 
   return (
-    <div className="pb-40 min-h-screen">
+    <div className="pb-48 min-h-screen">
       {/* TopAppBar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl flex items-center px-6 py-4 w-full border-b border-surface-container-low">
         <button onClick={() => navigate('/')} className="text-on-surface-variant p-1">

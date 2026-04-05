@@ -32,7 +32,18 @@ const Home: React.FC = () => {
       <main className="px-6 pt-12 max-w-2xl mx-auto space-y-10">
         {/* Today Hero */}
         <section>
-          <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary mb-6 italic uppercase">Today</h2>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary italic uppercase">Today</h2>
+            {activePlan && (
+              <button
+                onClick={skipDay}
+                className="inline-flex shrink-0 items-center rounded-full border border-surface-container-low bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant shadow-sm transition-all hover:border-primary/20 hover:text-primary active:scale-95"
+                aria-label="Skip today"
+              >
+                Skip
+              </button>
+            )}
+          </div>
 
           {activePlan && todayDay ? (
             <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl border border-surface-container-low group transition-all duration-500">
@@ -68,12 +79,6 @@ const Home: React.FC = () => {
                       </div>
                       <p className="text-blue-900 font-bold text-sm leading-tight">Your body needs this time to rebuild and grow stronger.</p>
                     </div>
-                    <button
-                      onClick={skipDay}
-                      className="w-full py-6 px-8 rounded-full bg-on-surface text-white font-black text-xl uppercase italic tracking-widest shadow-xl hover:opacity-90 transition-all active:scale-[0.98]"
-                    >
-                      I'm Rested, Next Day
-                    </button>
                   </div>
                 ) : (
                   <>
@@ -137,8 +142,8 @@ const Home: React.FC = () => {
               {weeklyActivity.map((day, i) => (
                 <div key={i} className="flex flex-col items-center gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${day.active ? 'bg-primary-container text-primary shadow-inner' :
-                      day.isToday ? 'border-2 border-primary border-dashed' :
-                        'border-2 border-dashed border-outline-variant/30'
+                    day.isToday ? 'border-2 border-primary border-dashed' :
+                      'border-2 border-dashed border-outline-variant/30'
                     }`}>
                     {day.active && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                     {day.isToday && !day.active && <div className="w-2.5 h-2.5 rounded-full bg-primary/20 animate-pulse" />}
