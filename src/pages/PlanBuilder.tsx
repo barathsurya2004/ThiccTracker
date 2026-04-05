@@ -283,7 +283,7 @@ const PlanBuilder: React.FC = () => {
                   <button
                     onClick={handleParse}
                     disabled={loading || !input.trim()}
-                    className="bg-primary text-white px-7 py-3.5 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+                    className="bg-primary text-white px-7 py-3.5 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled"
                   >
                     {loading ? 'Thinking...' : 'Generate Split'}
                   </button>

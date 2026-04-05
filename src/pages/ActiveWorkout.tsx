@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { X, FastForward, CheckCircle2, Dumbbell, Zap, ArrowRight } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
+import PageBackdrop from '../components/layout/PageBackdrop';
 
 type WorkoutUIState = 'performing_set' | 'rest_between_sets' | 'rest_between_exercises';
 
@@ -19,6 +20,7 @@ const ActiveWorkout: React.FC = () => {
   const [uiState, setUiState] = useState<WorkoutUIState>('performing_set');
   const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [isCompleting, setIsCompleting] = useState(false);
   const hasAdvancedRef = useRef(false);
 
   const totalRest = useMemo(() => {
@@ -106,18 +108,22 @@ const ActiveWorkout: React.FC = () => {
           return sum + (exercise.sets * repsValue);
         }, 0);
 
-        finishWorkout();
-        navigate('/workout/complete', {
-          state: {
-            dayName: currentDay.name,
-            planName: quickWorkoutDay ? 'Quick Workout' : activePlan?.planName || 'Workout',
-            exerciseCount: currentDay.exercises.length,
-            totalSets,
-            totalReps,
-            exerciseName: currentExercise.name,
-            completedAt: new Date().toISOString(),
-          },
-        });
+        const completionState = {
+          dayName: currentDay.name,
+          planName: quickWorkoutDay ? 'Quick Workout' : activePlan?.planName || 'Workout',
+          exerciseCount: currentDay.exercises.length,
+          totalSets,
+          totalReps,
+          exerciseName: currentExercise.name,
+          completedAt: new Date().toISOString(),
+        };
+
+        setIsCompleting(true);
+
+        window.setTimeout(() => {
+          finishWorkout();
+          navigate('/workout/complete', { state: completionState });
+        }, 450);
       }
     }
   };
@@ -133,7 +139,8 @@ const ActiveWorkout: React.FC = () => {
   const formattedTimeLeft = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container overflow-hidden">
+    <div className="relative isolate min-h-screen overflow-hidden bg-background text-on-surface font-body selection:bg-primary-container">
+      <PageBackdrop />
       <button
         onClick={() => navigate('/workout')}
         className="fixed top-6 left-6 z-50 inline-flex items-center justify-center rounded-full border border-surface-container-low bg-white/90 p-2.5 shadow-sm backdrop-blur-xl transition-opacity hover:opacity-80"
@@ -142,7 +149,7 @@ const ActiveWorkout: React.FC = () => {
         <X size={22} className="text-on-surface-variant" />
       </button>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-20 pb-32 max-w-lg mx-auto">
+      <main className="relative z-10 min-h-screen flex flex-col items-center justify-center px-8 pt-20 pb-32 max-w-lg mx-auto">
         <div className="w-full mb-8 rounded-[2.25rem] border border-white/70 bg-white/80 p-5 shadow-lg backdrop-blur-2xl animate-in fade-in slide-in-from-top-3 duration-500">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
@@ -173,7 +180,7 @@ const ActiveWorkout: React.FC = () => {
         </div>
 
         {/* Focus Area */}
-        <div className="text-center w-full mb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div key={`${uiState}-${currentExerciseIndex}-${currentSet}`} className="text-center w-full mb-12 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <span className="text-on-surface-variant font-black tracking-[0.2em] uppercase text-[10px] mb-4 block opacity-60">
             {uiState === 'performing_set' ? `Exercise ${currentExerciseIndex + 1} / ${currentDay.exercises.length}` :
               uiState === 'rest_between_sets' ? 'Recovery: Next Set' : 'Recovery: Next Exercise'}
@@ -193,7 +200,7 @@ const ActiveWorkout: React.FC = () => {
         </div>
 
         {/* Timer Visualizer */}
-        <div className="relative w-72 h-72 flex items-center justify-center mb-16">
+        <div key={`${uiState}-timer`} className="relative w-72 h-72 flex items-center justify-center mb-16 animate-in fade-in zoom-in-95 duration-300">
           <div className={`absolute inset-0 bg-primary/20 blur-[60px] rounded-full transition-all duration-1000 ${uiState !== 'performing_set' ? 'opacity-40 scale-110 animate-pulse' : 'opacity-10 scale-90'}`}></div>
           <svg className="absolute inset-0 w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
             <circle className="text-surface-container-highest opacity-30" cx="50" cy="50" fill="transparent" r="44" stroke="currentColor" strokeWidth="4" />
@@ -214,7 +221,7 @@ const ActiveWorkout: React.FC = () => {
               {uiState === 'performing_set' ? `${currentExercise.reps} Reps` : formattedTimeLeft}
             </span>
             {uiState !== 'performing_set' && (
-              <button onClick={handleSkipRest} className="mt-6 flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-widest bg-white px-4 py-2 rounded-full shadow-sm border border-surface-container-low hover:scale-105 transition-transform">
+              <button onClick={handleSkipRest} className="mt-6 flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-widest bg-white/90 px-4 py-2 rounded-full shadow-sm border border-surface-container-low transition-all hover:scale-105 hover:border-primary/20">
                 <FastForward size={14} fill="currentColor" />
                 Skip Rest
               </button>
@@ -225,7 +232,7 @@ const ActiveWorkout: React.FC = () => {
         {/* Up Next / Footer Context */}
         <div className="w-full space-y-4">
           {uiState === 'rest_between_sets' && (
-            <div className="bg-white rounded-3xl p-6 border border-surface-container-low shadow-lg flex items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
+            <div className="bg-white/85 rounded-3xl p-6 border border-surface-container-low shadow-lg flex items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-300 backdrop-blur-xl">
               <div className="flex items-center gap-4 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shadow-inner">
                   <Zap size={20} />
@@ -240,7 +247,7 @@ const ActiveWorkout: React.FC = () => {
           )}
 
           {uiState === 'rest_between_exercises' && nextExerciseData && (
-            <div className="bg-gradient-to-br from-primary-container/60 via-white to-white rounded-3xl p-6 border border-primary/20 shadow-xl shadow-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in slide-in-from-bottom-2 duration-500">
+            <div className="bg-gradient-to-br from-primary-container/60 via-white/95 to-white rounded-3xl p-6 border border-primary/20 shadow-xl shadow-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in slide-in-from-bottom-2 duration-300 backdrop-blur-xl">
               <div className="flex items-center gap-4 min-w-0">
                 <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 animate-pulse">
                   <Dumbbell size={20} />
@@ -263,7 +270,7 @@ const ActiveWorkout: React.FC = () => {
           {uiState === 'performing_set' ? (
             <button
               onClick={handleCompleteSet}
-              className="w-full max-w-md bg-primary text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-3"
+              className="w-full max-w-md bg-primary text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl shadow-primary/30 hover:shadow-primary/40 active:scale-95 transition-all duration-300 transform-gpu animate-in fade-in zoom-in-95 uppercase tracking-widest flex items-center justify-center gap-3"
             >
               <CheckCircle2 size={24} />
               Complete Set {currentSet}
@@ -271,12 +278,25 @@ const ActiveWorkout: React.FC = () => {
           ) : (
             <button
               onClick={handleSkipRest}
-              className="w-full max-w-md bg-on-surface text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl transition-all active:scale-95 uppercase tracking-widest"
+              className="w-full max-w-md bg-on-surface text-white py-6 rounded-full font-headline font-black text-xl tracking-tight shadow-2xl transition-all duration-300 transform-gpu animate-in fade-in zoom-in-95 active:scale-95 uppercase tracking-widest"
             >
               Ready Now
             </button>
           )}
         </div>
+
+        {isCompleting && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/70 backdrop-blur-2xl animate-in fade-in duration-300">
+            <div className="relative w-[min(92vw,26rem)] rounded-[2.5rem] border border-white/80 bg-white/85 p-8 text-center shadow-2xl shadow-primary/10">
+              <div className="absolute inset-0 rounded-[2.5rem] bg-[radial-gradient(circle_at_top,_rgba(86,99,66,0.16),_transparent_55%)]" />
+              <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary-container text-primary shadow-lg shadow-primary/20 animate-pulse">
+                <CheckCircle2 size={54} strokeWidth={2.5} />
+              </div>
+              <p className="relative text-[10px] font-black uppercase tracking-[0.35em] text-on-surface-variant opacity-60 mb-2">Workout complete</p>
+              <h3 className="relative font-headline text-3xl font-black uppercase italic tracking-tighter text-primary">Nice work</h3>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

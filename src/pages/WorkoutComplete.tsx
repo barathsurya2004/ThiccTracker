@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, Dumbbell, Flame, Clock3, ListChecks, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Flame, Clock3, ListChecks, ArrowRight, Share2, Sparkles } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import { calculateStreak } from '../utils/scheduler';
+import PageBackdrop from '../components/layout/PageBackdrop';
 
 type WorkoutCompleteState = {
     dayName?: string;
@@ -37,12 +38,21 @@ const WorkoutComplete: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(231,240,216,0.95)_42%,_rgba(214,226,184,0.92)_100%)] text-on-surface font-body selection:bg-primary-container">
-            <main className="mx-auto flex min-h-[calc(100vh-73px)] w-full max-w-2xl flex-col items-center px-6 py-8 sm:py-10 space-y-6">
-                <div className="relative">
+        <div className="relative isolate min-h-screen overflow-hidden text-on-surface font-body selection:bg-primary-container">
+            <PageBackdrop />
+            <main className="relative z-10 mx-auto flex min-h-[calc(100vh-73px)] w-full max-w-2xl flex-col items-center px-6 py-8 sm:py-10 space-y-6">
+                <div className="relative mt-2">
                     <div className="absolute inset-0 rounded-full bg-primary-container/50 blur-3xl" />
-                    <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/80 bg-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl animate-in zoom-in-90 duration-500">
+                    <div className="absolute inset-0 animate-spin [animation-duration:18s]">
+                        <div className="absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10" />
+                        <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/15 border-dashed" />
+                    </div>
+                    <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/80 bg-white/85 shadow-[0_14px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl animate-in zoom-in-90 duration-500">
                         <CheckCircle2 size={64} strokeWidth={2.5} className="text-primary" />
+                    </div>
+                    <div className="absolute -right-3 top-4 rounded-full bg-white/85 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm animate-bounce">
+                        <Sparkles size={12} className="inline-block mr-1" />
+                        Done
                     </div>
                 </div>
 
@@ -60,7 +70,7 @@ const WorkoutComplete: React.FC = () => {
                     {stats.map((item) => (
                         <div
                             key={item.label}
-                            className="rounded-3xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur-xl animate-in fade-in zoom-in-95 duration-700"
+                            className="rounded-[2rem] border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur-xl animate-in fade-in zoom-in-95 duration-700"
                         >
                             <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-container/60 text-primary">
                                 {item.icon}
@@ -73,7 +83,7 @@ const WorkoutComplete: React.FC = () => {
                     ))}
                 </section>
 
-                <section className="w-full rounded-[2.25rem] border border-primary/10 bg-gradient-to-br from-primary-container/60 via-white to-white p-5 shadow-xl shadow-primary/10 animate-in fade-in slide-in-from-bottom-3 duration-700">
+                <section className="w-full rounded-[2rem] border border-primary/10 bg-gradient-to-br from-primary-container/60 via-white to-white p-5 shadow-xl shadow-primary/10 animate-in fade-in slide-in-from-bottom-3 duration-700">
                     <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
                             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-primary opacity-70">Session recap</p>
@@ -94,14 +104,22 @@ const WorkoutComplete: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => navigate('/dashboard')}
-                        className="flex w-full items-center justify-center gap-3 rounded-full bg-primary px-6 py-5 font-headline text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-primary/20 transition-transform active:scale-[0.98]"
+                        className="flex w-full items-center justify-center gap-3 rounded-full bg-primary px-6 py-5 font-headline text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-primary/20 transition-all duration-300 transform-gpu animate-in fade-in zoom-in-95 delay-75 active:scale-[0.98]"
                     >
                         <Dumbbell size={22} />
                         Back to Dashboard
                     </button>
                 </div>
 
-                <section className="w-full rounded-[2.25rem] border border-tertiary-fixed-dim/30 bg-tertiary-container/45 p-5 shadow-sm flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-primary/15 bg-white/80 px-5 py-3 text-xs font-black uppercase tracking-widest text-primary shadow-sm transition-all hover:border-primary/25 hover:bg-white active:scale-95"
+                >
+                    <Share2 size={16} />
+                    Share workout
+                </button>
+
+                <section className="w-full rounded-[2rem] border border-tertiary-fixed-dim/30 bg-tertiary-container/45 p-5 shadow-sm flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
                         <Flame size={22} className="text-primary" fill="currentColor" />
                     </div>

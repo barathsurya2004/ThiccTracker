@@ -61,8 +61,8 @@ const Home: React.FC = () => {
   const hasInProgressSession = currentExerciseIndex > 0 || currentSet > 1;
 
   return (
-    <div className="pb-32">
-      <main className="px-6 pt-12 max-w-2xl mx-auto space-y-10">
+    <div className="relative isolate min-h-screen overflow-hidden pb-32">
+      <main className="relative z-10 px-6 pt-12 max-w-2xl mx-auto space-y-10">
         {/* Today Hero */}
         <section>
           <div className="flex items-center justify-between gap-4 mb-6">
@@ -73,7 +73,7 @@ const Home: React.FC = () => {
             {activePlan && (
               <button
                 onClick={skipDay}
-                className="inline-flex shrink-0 items-center rounded-full border border-surface-container-low bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant shadow-sm transition-all hover:border-primary/20 hover:text-primary active:scale-95"
+                className="inline-flex shrink-0 items-center rounded-full border border-surface-container-low bg-white/90 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant shadow-sm transition-all hover:border-primary/20 hover:text-primary active:scale-95"
                 aria-label={`Skip ${heroLabel.toLowerCase()}`}
               >
                 Skip
@@ -159,7 +159,7 @@ const Home: React.FC = () => {
 
                     <button
                       onClick={handleStartWorkout}
-                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'}`}
+                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all duration-300 transform-gpu animate-in fade-in zoom-in-95 delay-75 active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'}`}
                     >
                       {hasInProgressSession ? 'Resume Workout' : `Start`}
                     </button>
@@ -174,7 +174,7 @@ const Home: React.FC = () => {
               <p className="text-on-surface-variant text-sm font-medium mb-8 opacity-60">Create a workout plan using AI to get started.</p>
               <button
                 onClick={() => navigate('/plan')}
-                className="bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest"
+                className="bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-transform duration-300 animate-in fade-in zoom-in-95 active:scale-95"
               >
                 Go to Plan Builder
               </button>
@@ -190,7 +190,7 @@ const Home: React.FC = () => {
               {currentStreak}-day streak
             </span>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 border border-surface-container-low shadow-sm">
+          <div className="bg-white/85 rounded-[2rem] p-8 border border-surface-container-low shadow-sm backdrop-blur-xl">
             <div className="flex justify-between items-center">
               {weeklyActivity.map((day, i) => (
                 <div key={i} className="flex flex-col items-center gap-4">
@@ -225,7 +225,7 @@ const Home: React.FC = () => {
                 if (nextIdx === currentIndex && activePlan.days.length === 1) return null;
 
                 return (
-                  <div key={nextIdx} className={`min-w-[260px] bg-white rounded-[2rem] p-8 shadow-sm border border-surface-container-low flex flex-col justify-between group hover:border-primary/20 transition-all ${nextDay.type === 'rest' ? 'opacity-60' : ''}`}>
+                  <div key={nextIdx} className={`min-w-[260px] bg-white/85 rounded-[2rem] p-8 shadow-sm border border-surface-container-low flex flex-col justify-between group hover:border-primary/20 transition-all backdrop-blur-xl ${nextDay.type === 'rest' ? 'opacity-60' : ''}`}>
                     <div>
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform ${nextDay.type === 'rest' ? 'bg-blue-50 text-blue-500' : nextDay.type === 'cardio' ? 'bg-orange-50 text-orange-500' : 'bg-surface-container-low text-primary'
                         }`}>
@@ -259,7 +259,7 @@ const Home: React.FC = () => {
 
         {/* Bento Stats */}
         <section className="grid grid-cols-2 gap-4 pb-8">
-          <div className="bg-white rounded-[2rem] p-8 flex flex-col justify-between aspect-square border border-surface-container-low group hover:border-primary/20 transition-all shadow-sm">
+          <div className="bg-white/85 rounded-[2rem] p-8 flex flex-col justify-between aspect-square border border-surface-container-low group hover:border-primary/20 transition-all shadow-sm backdrop-blur-xl">
             <div className="w-12 h-12 rounded-2xl bg-primary-container/30 flex items-center justify-center text-primary shadow-inner group-hover:scale-110 transition-transform">
               <Flame size={24} />
             </div>
@@ -268,7 +268,7 @@ const Home: React.FC = () => {
               <div className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Est. Calories Burned</div>
             </div>
           </div>
-          <div className="bg-white rounded-[2rem] p-8 flex flex-col justify-between aspect-square border border-surface-container-low group hover:border-primary/20 transition-all shadow-sm">
+          <div className="bg-white/85 rounded-[2rem] p-8 flex flex-col justify-between aspect-square border border-surface-container-low group hover:border-primary/20 transition-all shadow-sm backdrop-blur-xl">
             <div className="w-12 h-12 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary shadow-inner group-hover:scale-110 transition-transform">
               <Heart size={24} />
             </div>

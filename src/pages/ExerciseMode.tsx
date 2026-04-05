@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Dumbbell, Coffee } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
+import PageBackdrop from '../components/layout/PageBackdrop';
 
 const ExerciseMode: React.FC = () => {
   const navigate = useNavigate();
@@ -16,23 +17,34 @@ const ExerciseMode: React.FC = () => {
 
   if (!currentDay) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div>
-          <h2 className="text-2xl font-black text-primary uppercase italic mb-4">No Workout Selected</h2>
-          <button
-            onClick={() => navigate('/plan')}
-            className="bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest"
-          >
-            Go to Plan Builder
-          </button>
-        </div>
+      <div className="relative isolate min-h-screen overflow-hidden">
+        <PageBackdrop />
+        <main className="relative z-10 flex min-h-screen items-center justify-center p-6 text-center">
+          <div className="w-full max-w-sm rounded-[2.25rem] border border-white/80 bg-white/80 p-8 shadow-xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-500">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container/60 text-primary shadow-inner">
+              <Dumbbell size={30} />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-on-surface-variant opacity-55 mb-2">No active workout</p>
+            <h2 className="text-3xl font-black text-primary uppercase italic mb-3">Pick a plan first</h2>
+            <p className="text-sm font-medium text-on-surface-variant leading-relaxed mb-8">
+              Create or select a workout plan before starting a session. Once a rest day is active, this screen will switch to recovery mode instead of showing a start action.
+            </p>
+            <button
+              onClick={() => navigate('/plan')}
+              className="w-full bg-primary text-white px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-transform duration-300 animate-in fade-in zoom-in-95 active:scale-95"
+            >
+              Go to Plan Builder
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="pb-48 min-h-screen">
-      <main className="pt-12 px-6 max-w-2xl mx-auto w-full">
+    <div className="relative isolate min-h-screen overflow-hidden pb-48">
+      <PageBackdrop />
+      <main className="relative z-10 pt-12 px-6 max-w-2xl mx-auto w-full">
         <section className="mb-8 rounded-[2.25rem] border border-white/70 bg-white/80 p-5 shadow-lg backdrop-blur-2xl animate-in fade-in slide-in-from-top-3 duration-500">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
@@ -161,7 +173,7 @@ const ExerciseMode: React.FC = () => {
           <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-40">
             <button
               onClick={() => navigate('/workout/active')}
-              className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
+              className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-2xl shadow-primary/25 transition-all duration-300 transform-gpu animate-in fade-in zoom-in-95 delay-75 active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
             >
               <Play size={24} fill="currentColor" />
               {hasInProgressSession ? 'Resume Workout' : 'Start Workout'}
