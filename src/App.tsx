@@ -6,6 +6,7 @@ import PlanBuilder from './pages/PlanBuilder';
 import ExerciseMode from './pages/ExerciseMode';
 import ActiveWorkout from './pages/ActiveWorkout';
 import Dashboard from './pages/Dashboard';
+import WorkoutComplete from './pages/WorkoutComplete';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
         </Route>
         {/* Active workout mode is fullscreen, no navbar */}
         <Route path="workout/active" element={<ActiveWorkout />} />
+        <Route path="workout/complete" element={<WorkoutComplete />} />
       </Routes>
     </BrowserRouter>
   );

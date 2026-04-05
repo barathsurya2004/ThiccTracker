@@ -1,0 +1,117 @@
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle2, Dumbbell, Flame, Clock3, ListChecks, ArrowRight } from 'lucide-react';
+import { useWorkoutStore } from '../store/useWorkoutStore';
+import { calculateStreak } from '../utils/scheduler';
+
+type WorkoutCompleteState = {
+    dayName?: string;
+    planName?: string;
+    exerciseName?: string;
+    exerciseCount?: number;
+    totalSets?: number;
+    totalReps?: number;
+    completedAt?: string;
+};
+
+const WorkoutComplete: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { history } = useWorkoutStore();
+
+    const completionState = (location.state || {}) as WorkoutCompleteState;
+    const currentStreak = calculateStreak(history);
+
+    const stats = [
+        {
+            icon: <Clock3 size={22} />,
+            label: 'Plan',
+            value: completionState.planName || 'Workout',
+        },
+        {
+            icon: <ListChecks size={22} />,
+            label: 'Exercises',
+            value: String(completionState.exerciseCount ?? 0),
+        },
+
+    ];
+
+    return (
+        <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.98),_rgba(231,240,216,0.95)_42%,_rgba(214,226,184,0.92)_100%)] text-on-surface font-body selection:bg-primary-container">
+            <main className="mx-auto flex min-h-[calc(100vh-73px)] w-full max-w-2xl flex-col items-center px-6 py-8 sm:py-10 space-y-6">
+                <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-primary-container/50 blur-3xl" />
+                    <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-white/80 bg-white/80 shadow-[0_14px_40px_rgba(0,0,0,0.08)] backdrop-blur-xl animate-in zoom-in-90 duration-500">
+                        <CheckCircle2 size={64} strokeWidth={2.5} className="text-primary" />
+                    </div>
+                </div>
+
+                <div className="text-center animate-in fade-in slide-in-from-bottom-2 duration-700">
+                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.35em] text-on-surface-variant opacity-60">Workout logged</p>
+                    <h2 className="mb-3 font-headline text-4xl font-black uppercase italic tracking-tighter text-primary sm:text-5xl">
+                        Nice work
+                    </h2>
+                    <p className="mx-auto max-w-md text-sm font-medium leading-relaxed text-on-surface-variant sm:text-base">
+                        {completionState.dayName || 'Your session'} has been saved.
+                    </p>
+                </div>
+
+                <section className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
+                    {stats.map((item) => (
+                        <div
+                            key={item.label}
+                            className="rounded-3xl border border-white/80 bg-white/75 p-4 shadow-sm backdrop-blur-xl animate-in fade-in zoom-in-95 duration-700"
+                        >
+                            <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-container/60 text-primary">
+                                {item.icon}
+                            </div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-55">{item.label}</p>
+                            <p className="mt-1 break-words font-headline text-2xl font-black tracking-tight text-on-surface">
+                                {item.value}
+                            </p>
+                        </div>
+                    ))}
+                </section>
+
+                <section className="w-full rounded-[2.25rem] border border-primary/10 bg-gradient-to-br from-primary-container/60 via-white to-white p-5 shadow-xl shadow-primary/10 animate-in fade-in slide-in-from-bottom-3 duration-700">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-primary opacity-70">Session recap</p>
+                            <h3 className="mt-2 font-headline text-xl font-black uppercase italic tracking-tight text-on-surface break-words">
+                                {completionState.exerciseName || 'Completed session'}
+                            </h3>
+                            <p className="mt-2 text-sm font-medium text-on-surface-variant opacity-80">
+                                {completionState.completedAt ? new Date(completionState.completedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'Just now'}
+                            </p>
+                        </div>
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                            <ArrowRight size={22} />
+                        </div>
+                    </div>
+                </section>
+
+                <div className="w-full max-w-md">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/dashboard')}
+                        className="flex w-full items-center justify-center gap-3 rounded-full bg-primary px-6 py-5 font-headline text-lg font-black uppercase tracking-widest text-white shadow-2xl shadow-primary/20 transition-transform active:scale-[0.98]"
+                    >
+                        <Dumbbell size={22} />
+                        Back to Dashboard
+                    </button>
+                </div>
+
+                <section className="w-full rounded-[2.25rem] border border-tertiary-fixed-dim/30 bg-tertiary-container/45 p-5 shadow-sm flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                        <Flame size={22} className="text-primary" fill="currentColor" />
+                    </div>
+                    <p className="text-sm font-medium leading-relaxed text-on-tertiary-container">
+                        You’re on a <span className="font-black">{currentStreak}-day streak</span>.
+                    </p>
+                </section>
+            </main>
+        </div>
+    );
+};
+
+export default WorkoutComplete;

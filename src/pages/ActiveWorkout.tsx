@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, FastForward, CheckCircle2, Dumbbell, Zap, ArrowRight } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
@@ -17,36 +17,73 @@ const ActiveWorkout: React.FC = () => {
 
   // State Machine
   const [uiState, setUiState] = useState<WorkoutUIState>('performing_set');
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const hasAdvancedRef = useRef(false);
+
+  const totalRest = useMemo(() => {
+    if (!currentExercise) return 0;
+
+    return uiState === 'rest_between_sets' ? currentExercise.setRest : currentExercise.exerciseRest;
+  }, [uiState, currentExercise]);
+
+  const timeLeft = useMemo(() => {
+    if (uiState === 'performing_set') return 0;
+    if (!restEndsAt) return 0;
+
+    return Math.max(0, Math.ceil((restEndsAt - now) / 1000));
+  }, [uiState, restEndsAt, now]);
 
   const handleTimerEnd = useCallback(() => {
+    if (hasAdvancedRef.current) {
+      return;
+    }
+
+    hasAdvancedRef.current = true;
+
     if (uiState === 'rest_between_sets') {
       nextSet();
     } else if (uiState === 'rest_between_exercises') {
       nextExercise();
     }
+    setRestEndsAt(null);
     setUiState('performing_set');
   }, [uiState, nextSet, nextExercise]);
 
   useEffect(() => {
-    if (uiState === 'performing_set' || timeLeft <= 0) {
+    if (uiState === 'performing_set' || !restEndsAt) {
       return;
     }
 
-    const timer = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(timer);
-          handleTimerEnd();
-          return 0;
-        }
+    const tick = () => setNow(Date.now());
+    tick();
 
-        return prev - 1;
-      });
-    }, 1000);
+    const timer = window.setInterval(tick, 250);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        tick();
+      }
+    };
 
-    return () => window.clearInterval(timer);
-  }, [uiState, timeLeft, handleTimerEnd]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [uiState, restEndsAt]);
+
+  useEffect(() => {
+    if (uiState === 'performing_set' || !restEndsAt || timeLeft > 0) {
+      return;
+    }
+
+    handleTimerEnd();
+  }, [uiState, restEndsAt, timeLeft, handleTimerEnd]);
+
+  useEffect(() => {
+    hasAdvancedRef.current = false;
+  }, [uiState, currentSet, currentExerciseIndex]);
 
   const handleCompleteSet = () => {
     if (!currentExercise) return;
@@ -54,17 +91,33 @@ const ActiveWorkout: React.FC = () => {
     if (currentSet < currentExercise.sets) {
       // More sets to go in THIS exercise
       setUiState('rest_between_sets');
-      setTimeLeft(currentExercise.setRest);
+      setRestEndsAt(Date.now() + currentExercise.setRest * 1000);
     } else {
       // Last set of THIS exercise
       if (currentExerciseIndex < (currentDay?.exercises.length || 0) - 1) {
         // More exercises to go
         setUiState('rest_between_exercises');
-        setTimeLeft(currentExercise.exerciseRest);
+        setRestEndsAt(Date.now() + currentExercise.exerciseRest * 1000);
       } else {
         // Workout finished
+        const totalSets = currentDay.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+        const totalReps = currentDay.exercises.reduce((sum, exercise) => {
+          const repsValue = typeof exercise.reps === 'number' ? exercise.reps : Number.parseInt(exercise.reps, 10) || 0;
+          return sum + (exercise.sets * repsValue);
+        }, 0);
+
         finishWorkout();
-        navigate('/');
+        navigate('/workout/complete', {
+          state: {
+            dayName: currentDay.name,
+            planName: quickWorkoutDay ? 'Quick Workout' : activePlan?.planName || 'Workout',
+            exerciseCount: currentDay.exercises.length,
+            totalSets,
+            totalReps,
+            exerciseName: currentExercise.name,
+            completedAt: new Date().toISOString(),
+          },
+        });
       }
     }
   };
@@ -75,8 +128,9 @@ const ActiveWorkout: React.FC = () => {
 
   if (!currentExercise || !currentDay) return null;
 
-  const totalRest = uiState === 'rest_between_sets' ? currentExercise.setRest : currentExercise.exerciseRest;
   const progress = (timeLeft / (totalRest || 1)) * 276.46;
+
+  const formattedTimeLeft = `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`;
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container overflow-hidden">
@@ -156,8 +210,8 @@ const ActiveWorkout: React.FC = () => {
             <span className="text-on-surface-variant text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">
               {uiState === 'performing_set' ? 'Work' : 'Rest'}
             </span>
-            <span className={`font-headline text-7xl font-black tracking-tighter text-on-surface transition-all ${uiState === 'performing_set' && 'scale-90 opacity-20'}`}>
-              {uiState === 'performing_set' ? '0:00' : `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`}
+            <span className={`font-headline text-7xl font-black tracking-tighter text-on-surface transition-all ${uiState === 'performing_set' && 'scale-90 opacity-60'}`}>
+              {uiState === 'performing_set' ? `${currentExercise.reps} Reps` : formattedTimeLeft}
             </span>
             {uiState !== 'performing_set' && (
               <button onClick={handleSkipRest} className="mt-6 flex items-center gap-1.5 text-primary text-[10px] font-black uppercase tracking-widest bg-white px-4 py-2 rounded-full shadow-sm border border-surface-container-low hover:scale-105 transition-transform">

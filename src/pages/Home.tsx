@@ -11,6 +11,9 @@ const Home: React.FC = () => {
   const activePlan = plans.find(p => p.id === activePlanId) || null;
   const currentIndex = activePlan?.currentIndex || 0;
   const todayDay = activePlan?.days[currentIndex] || null;
+  const todayDate = new Date().toLocaleDateString('en-CA');
+  const latestWorkoutDate = history[0]?.date ? new Date(history[0].date).toLocaleDateString('en-CA') : null;
+  const heroLabel = latestWorkoutDate === todayDate ? 'Tomorrow' : 'Today';
 
   const currentStreak = calculateStreak(history);
   const weeklyActivity = getWeeklyActivity(history);
@@ -65,13 +68,13 @@ const Home: React.FC = () => {
           <div className="flex items-center justify-between gap-4 mb-6">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.35em] text-on-surface-variant opacity-40 mb-2">Daily focus</p>
-              <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary italic uppercase">Today</h2>
+              <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary italic uppercase">{heroLabel}</h2>
             </div>
             {activePlan && (
               <button
                 onClick={skipDay}
                 className="inline-flex shrink-0 items-center rounded-full border border-surface-container-low bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface-variant shadow-sm transition-all hover:border-primary/20 hover:text-primary active:scale-95"
-                aria-label="Skip today"
+                aria-label={`Skip ${heroLabel.toLowerCase()}`}
               >
                 Skip
               </button>
@@ -158,7 +161,7 @@ const Home: React.FC = () => {
                       onClick={handleStartWorkout}
                       className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'}`}
                     >
-                      {hasInProgressSession ? 'Resume Workout' : `Start ${todayDay.type === 'cardio' ? 'Cardio' : 'Workout'}`}
+                      {hasInProgressSession ? 'Resume Workout' : `Start`}
                     </button>
                   </>
                 )}

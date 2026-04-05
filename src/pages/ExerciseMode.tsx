@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Dumbbell } from 'lucide-react';
+import { Play, Dumbbell, Coffee } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
 const ExerciseMode: React.FC = () => {
@@ -39,57 +39,82 @@ const ExerciseMode: React.FC = () => {
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant opacity-40 block mb-1">Workout guide</span>
               <h2 className="font-headline text-xl font-black uppercase italic tracking-tight text-primary">{displayPlanName || 'Ready to train'}</h2>
             </div>
-            {quickWorkoutDay &&
+            {currentDay.type === 'rest' ? (
+              <div className="rounded-full bg-blue-100 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-blue-600 shadow-sm">
+                Recovery Day
+              </div>
+            ) : quickWorkoutDay ? (
               <div className="rounded-full bg-primary-container/70 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm">
+                Quick Workout
               </div>
-            }
+            ) : null}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
-            <div className="rounded-2xl bg-primary-container/50 px-3 py-3 text-center">
-              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Day</span>
-              <span className="text-xs font-black uppercase text-primary break-words">{currentDay.name}</span>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
-              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Exercises</span>
-              <span className="text-xs font-black uppercase text-on-surface">{currentDay.exercises.length}</span>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
-              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Focus</span>
-              <span className="text-xs font-black uppercase text-on-surface truncate">{currentDay.focus[0] || 'Mixed'}</span>
-            </div>
-          </div>
-
-
-
-          {firstExercise && (
-            <div className="mt-4 rounded-2xl bg-gradient-to-br from-white via-primary-container/20 to-white px-4 py-4 border border-primary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          {currentDay.type === 'rest' ? (
+            <div className="rounded-[2rem] border border-blue-200 bg-blue-50/80 px-5 py-5 shadow-sm mb-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
+                <Coffee size={24} />
+              </div>
               <div className="min-w-0">
-                <span className="text-[9px] font-black uppercase tracking-widest text-primary block mb-1">Next up when you start</span>
-                <p className="font-headline font-black text-on-surface uppercase italic tracking-tight break-words">{firstExercise.name}</p>
-              </div>
-              <div className="rounded-full bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm self-start sm:self-auto">
-                {firstExercise.sets} x {firstExercise.reps}
+                <p className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-1">Recovery phase</p>
+                <p className="font-headline font-black text-on-surface uppercase italic tracking-tight break-words">Take it easy today</p>
               </div>
             </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+                <div className="rounded-2xl bg-primary-container/50 px-3 py-3 text-center">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Day</span>
+                  <span className="text-xs font-black uppercase text-primary break-words">{currentDay.name}</span>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Exercises</span>
+                  <span className="text-xs font-black uppercase text-on-surface">{currentDay.exercises.length}</span>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
+                  <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Focus</span>
+                  <span className="text-xs font-black uppercase text-on-surface truncate">{currentDay.focus[0] || 'Mixed'}</span>
+                </div>
+              </div>
+
+              {firstExercise && (
+                <div className="mt-4 rounded-2xl bg-gradient-to-br from-white via-primary-container/20 to-white px-4 py-4 border border-primary/10 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-primary block mb-1">Next up when you start</span>
+                    <p className="font-headline font-black text-on-surface uppercase italic tracking-tight break-words">{firstExercise.name}</p>
+                  </div>
+                  <div className="rounded-full bg-white px-3 py-2 text-[10px] font-black uppercase tracking-widest text-primary shadow-sm self-start sm:self-auto">
+                    {firstExercise.sets} x {firstExercise.reps}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
 
         <header className="mb-10">
           <div className="flex flex-wrap justify-between items-end gap-3 mb-4">
             <h1 className="font-headline text-4xl font-black tracking-tight text-primary uppercase italic break-words">{currentDay.name}</h1>
-            <span className="text-on-surface-variant font-bold text-xs bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider opacity-70 shrink-0">
-              {currentDay.exercises.length} Exercises
-            </span>
+            {currentDay.type === 'rest' ? (
+              <span className="text-blue-600 font-bold text-xs bg-blue-100 px-3 py-1 rounded-full uppercase tracking-wider shrink-0">
+                Recovery Day
+              </span>
+            ) : (
+              <span className="text-on-surface-variant font-bold text-xs bg-surface-container px-3 py-1 rounded-full uppercase tracking-wider opacity-70 shrink-0">
+                {currentDay.exercises.length} Exercises
+              </span>
+            )}
           </div>
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-            <span className="px-4 py-1.5 bg-primary-container text-primary text-[10px] font-black rounded-full uppercase tracking-widest border border-primary/10">
-              {currentDay.intensity} Intensity
-            </span>
-            <span className="px-4 py-1.5 bg-white text-on-surface-variant text-[10px] font-black rounded-full uppercase tracking-widest border border-surface-container-low whitespace-nowrap">
-              {currentDay.focus.join(' • ')}
-            </span>
-          </div>
+          {currentDay.type !== 'rest' && (
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+              <span className="px-4 py-1.5 bg-primary-container text-primary text-[10px] font-black rounded-full uppercase tracking-widest border border-primary/10">
+                {currentDay.intensity} Intensity
+              </span>
+              <span className="px-4 py-1.5 bg-white text-on-surface-variant text-[10px] font-black rounded-full uppercase tracking-widest border border-surface-container-low whitespace-nowrap">
+                {currentDay.focus.join(' • ')}
+              </span>
+            </div>
+          )}
         </header>
 
         <section className="space-y-4">
@@ -132,15 +157,17 @@ const ExerciseMode: React.FC = () => {
         </section>
 
         {/* Action Button - Leads to Active Session */}
-        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-40">
-          <button
-            onClick={() => navigate('/workout/active')}
-            className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
-          >
-            <Play size={24} fill="currentColor" />
-            {hasInProgressSession ? 'Resume Workout' : 'Start Workout'}
-          </button>
-        </div>
+        {currentDay.type !== 'rest' && (
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 w-[90%] max-w-md z-40">
+            <button
+              onClick={() => navigate('/workout/active')}
+              className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-full font-headline font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform active:scale-95 flex justify-center items-center gap-3 uppercase tracking-widest"
+            >
+              <Play size={24} fill="currentColor" />
+              {hasInProgressSession ? 'Resume Workout' : 'Start Workout'}
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

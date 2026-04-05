@@ -18,10 +18,9 @@ const Navbar: React.FC = () => {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center rounded-full px-5 py-2 transition-all duration-300 ${
-                isActive 
-                  ? 'bg-primary-container text-primary scale-105 shadow-sm' 
-                  : 'text-on-surface-variant hover:bg-surface-container-low active:scale-95'
+              `flex flex-col items-center justify-center rounded-full px-3 py-2 flex-1 min-w-0 transition-all duration-300 ${isActive
+                ? 'bg-primary-container text-primary scale-105 shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container-low active:scale-95'
               }`
             }
           >
