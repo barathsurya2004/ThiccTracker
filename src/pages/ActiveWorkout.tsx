@@ -79,7 +79,7 @@ const ActiveWorkout: React.FC = () => {
   const progress = (timeLeft / (totalRest || 1)) * 276.46;
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container">
+    <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container overflow-hidden">
       <button
         onClick={() => navigate('/workout')}
         className="fixed top-6 left-6 z-50 inline-flex items-center justify-center rounded-full border border-surface-container-low bg-white/90 p-2.5 shadow-sm backdrop-blur-xl transition-opacity hover:opacity-80"
@@ -88,23 +88,51 @@ const ActiveWorkout: React.FC = () => {
         <X size={22} className="text-on-surface-variant" />
       </button>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-16 pb-32 max-w-lg mx-auto">
+      <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-20 pb-32 max-w-lg mx-auto">
+        <div className="w-full mb-8 rounded-[2.25rem] border border-white/70 bg-white/80 p-5 shadow-lg backdrop-blur-2xl animate-in fade-in slide-in-from-top-3 duration-500">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant opacity-40 block mb-1">Session guide</span>
+              <h2 className="font-headline text-xl font-black uppercase italic tracking-tight text-primary">Stay in the flow</h2>
+            </div>
+            <div className="text-right">
+              <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40">Set</span>
+              <span className="font-black text-lg text-on-surface">{currentSet} / {currentExercise.sets}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+            <div className="rounded-2xl bg-primary-container/50 px-3 py-3 text-center">
+              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Day</span>
+              <span className="text-xs font-black uppercase text-primary break-words">{currentDay.name}</span>
+            </div>
+            <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
+              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Exercise</span>
+              <span className="text-xs font-black uppercase text-on-surface">{currentExerciseIndex + 1} / {currentDay.exercises.length}</span>
+            </div>
+            <div className="rounded-2xl bg-white px-3 py-3 text-center border border-surface-container-low shadow-sm">
+              <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Phase</span>
+              <span className="text-xs font-black uppercase text-on-surface">{uiState === 'performing_set' ? 'Work' : 'Rest'}</span>
+            </div>
+          </div>
+
+        </div>
 
         {/* Focus Area */}
-        <div className="text-center w-full mb-12">
+        <div className="text-center w-full mb-12 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <span className="text-on-surface-variant font-black tracking-[0.2em] uppercase text-[10px] mb-4 block opacity-60">
             {uiState === 'performing_set' ? `Exercise ${currentExerciseIndex + 1} / ${currentDay.exercises.length}` :
               uiState === 'rest_between_sets' ? 'Recovery: Next Set' : 'Recovery: Next Exercise'}
           </span>
-          <h2 className="font-headline text-5xl font-black tracking-tighter text-primary mb-3 uppercase italic leading-none">
+          <h2 className="font-headline text-4xl sm:text-5xl font-black tracking-tighter text-primary mb-3 uppercase italic leading-none break-words">
             {uiState === 'rest_between_exercises' ? nextExerciseData?.name : currentExercise.name}
           </h2>
-          <div className="flex items-center justify-center gap-4 text-on-surface-variant">
-            <span className="bg-primary-container/30 text-primary px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase border border-primary/10">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-on-surface-variant">
+            <span className="bg-primary-container/30 text-primary px-4 py-1.5 rounded-full text-xs font-black tracking-widest uppercase border border-primary/10 max-w-full break-words">
               {uiState === 'rest_between_exercises' ? 'Starting New' : `Set ${currentSet} / ${currentExercise.sets}`}
             </span>
             <span className="w-1 h-1 bg-outline-variant rounded-full opacity-30"></span>
-            <span className="text-xs font-black tracking-widest uppercase opacity-60">
+            <span className="text-xs font-black tracking-widest uppercase opacity-60 break-words">
               {uiState === 'rest_between_exercises' ? `${nextExerciseData?.reps} Reps` : `${currentExercise.reps} Reps`}
             </span>
           </div>
@@ -143,14 +171,14 @@ const ActiveWorkout: React.FC = () => {
         {/* Up Next / Footer Context */}
         <div className="w-full space-y-4">
           {uiState === 'rest_between_sets' && (
-            <div className="bg-white rounded-3xl p-6 border border-surface-container-low shadow-sm flex items-center justify-between animate-in fade-in zoom-in-95">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary">
+            <div className="bg-white rounded-3xl p-6 border border-surface-container-low shadow-lg flex items-center justify-between gap-4 animate-in fade-in zoom-in-95 duration-500">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shadow-inner">
                   <Zap size={20} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <span className="text-[9px] font-black uppercase text-on-surface-variant opacity-40 block tracking-widest">Next Up</span>
-                  <p className="font-headline font-bold text-on-surface uppercase">Set {currentSet + 1} of {currentExercise.sets}</p>
+                  <p className="font-headline font-bold text-on-surface uppercase break-words">Set {currentSet + 1} of {currentExercise.sets}</p>
                 </div>
               </div>
               <ArrowRight className="text-primary opacity-20" size={20} />
@@ -158,18 +186,19 @@ const ActiveWorkout: React.FC = () => {
           )}
 
           {uiState === 'rest_between_exercises' && nextExerciseData && (
-            <div className="bg-white rounded-3xl p-6 border border-primary/20 shadow-lg shadow-primary/5 flex items-center justify-between animate-in slide-in-from-bottom-2">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+            <div className="bg-gradient-to-br from-primary-container/60 via-white to-white rounded-3xl p-6 border border-primary/20 shadow-xl shadow-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-in slide-in-from-bottom-2 duration-500">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 animate-pulse">
                   <Dumbbell size={20} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <span className="text-[9px] font-black uppercase text-primary block tracking-widest">Exercise Transition</span>
-                  <p className="font-headline font-bold text-on-surface uppercase">{nextExerciseData.name}</p>
+                  <p className="font-headline font-bold text-on-surface uppercase break-words">{nextExerciseData.name}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-[10px] font-black text-primary">{nextExerciseData.sets} Sets</span>
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] font-black text-primary block uppercase tracking-widest mb-1">Up Next</span>
+                <span className="text-[10px] font-black text-on-surface-variant opacity-60 break-words">{nextExerciseData.sets} sets • {nextExerciseData.reps} reps</span>
               </div>
             </div>
           )}

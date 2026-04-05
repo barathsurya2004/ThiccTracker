@@ -144,31 +144,39 @@ const PlanBuilder: React.FC = () => {
 
         {/* 2. Create New Plan */}
         <section>
-          <div className="mb-8">
+          <div className="mb-6">
             <h2 className="font-headline font-black text-2xl text-primary uppercase italic tracking-tight mb-2">Create New Plan</h2>
-            <p className="font-body text-on-surface-variant text-sm opacity-60 font-medium">Use AI to generate a structured workout split.</p>
+            <p className="font-body text-on-surface-variant text-sm opacity-60 font-medium leading-relaxed">Use AI to turn a plain-text routine into a polished workout structure you can refine afterward.</p>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] p-8 border border-surface-container-low shadow-sm transition-all duration-300">
+          <div className="rounded-[2.75rem] border border-surface-container-low bg-white/85 p-6 shadow-lg backdrop-blur-xl transition-all duration-300">
+            <div className="mb-4 rounded-2xl bg-primary-container/35 px-4 py-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary opacity-70 mb-1">AI input</p>
+              <p className="text-sm font-medium text-on-surface-variant leading-relaxed">Paste a split, daily routine, or rough notes. The parser will organize the plan and fill the gaps.</p>
+            </div>
+
             <div className="flex flex-col gap-4">
               <textarea
-                className="w-full h-40 bg-background border-none focus:ring-2 focus:ring-primary/20 rounded-2xl p-6 font-body text-lg text-on-surface placeholder:text-outline-variant resize-none leading-relaxed shadow-inner"
+                className="w-full h-40 bg-background border-none focus:ring-2 focus:ring-primary/20 rounded-[1.75rem] p-6 font-body text-lg text-on-surface placeholder:text-outline-variant resize-none leading-relaxed shadow-inner"
                 placeholder="E.g. Upper/Lower split for 4 days..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
-              <div className="flex justify-between items-center">
-                <span className="font-black text-[9px] text-on-surface-variant uppercase tracking-[0.2em] flex items-center gap-2 opacity-40">
-                  <Sparkles size={12} className="text-primary" />
-                  AI Logic
-                </span>
-                <button
-                  onClick={handleParse}
-                  disabled={loading || !input.trim()}
-                  className="bg-primary text-white px-8 py-4 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
-                >
-                  {loading ? 'Thinking...' : 'Generate Split'}
-                </button>
+
+              <div className="sticky bottom-4 z-20">
+                <div className="rounded-[2rem] border border-white/70 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-xl flex items-center justify-between gap-4">
+                  <span className="font-black text-[9px] text-on-surface-variant uppercase tracking-[0.2em] flex items-center gap-2 opacity-55">
+                    <Sparkles size={12} className="text-primary" />
+                    AI Logic
+                  </span>
+                  <button
+                    onClick={handleParse}
+                    disabled={loading || !input.trim()}
+                    className="bg-primary text-white px-7 py-3.5 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Thinking...' : 'Generate Split'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -176,7 +184,7 @@ const PlanBuilder: React.FC = () => {
 
         {/* 3. AI Preview & Edit */}
         {parsed && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary opacity-60">Generated Plan</span>
@@ -199,11 +207,11 @@ const PlanBuilder: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-12">
+            <div className="space-y-8">
               {parsed.days.map((day, dIdx) => (
-                <div key={dIdx} className="space-y-6">
-                  <div className="flex items-center gap-4 px-2">
-                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm italic">
+                <div key={dIdx} className="space-y-5 rounded-[2.25rem] border border-surface-container-low bg-white/80 p-6 shadow-sm">
+                  <div className="flex items-center gap-4 px-1">
+                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm italic shadow-sm">
                       D{dIdx + 1}
                     </div>
                     <input
@@ -220,7 +228,7 @@ const PlanBuilder: React.FC = () => {
 
                   <div className="space-y-4">
                     {day.exercises.map((ex, eIdx) => (
-                      <div key={eIdx} className="bg-white p-6 rounded-[2rem] border border-surface-container-low shadow-sm flex flex-col gap-6 group hover:border-primary/20 transition-all">
+                      <div key={eIdx} className="bg-white p-5 rounded-[1.75rem] border border-surface-container-low shadow-sm flex flex-col gap-5 group hover:border-primary/20 transition-all">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
                             <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary shadow-inner">
@@ -307,7 +315,7 @@ const PlanBuilder: React.FC = () => {
                         newDays[dIdx].exercises.push(newEx);
                         setParsed({ ...parsed, days: newDays });
                       }}
-                      className="w-full py-4 border-2 border-dashed border-surface-container-high rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-4 border-2 border-dashed border-surface-container-high rounded-[1.75rem] text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center gap-2"
                     >
                       <Plus size={14} />
                       Add Exercise to {day.name}

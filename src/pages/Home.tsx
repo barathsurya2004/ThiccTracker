@@ -14,6 +14,31 @@ const Home: React.FC = () => {
 
   const currentStreak = calculateStreak(history);
   const weeklyActivity = getWeeklyActivity(history);
+  const todayTheme = todayDay
+    ? {
+      workout: {
+        shell: 'border-primary/15 bg-gradient-to-br from-primary/12 via-white to-primary/5',
+        badge: 'bg-primary text-white',
+        tint: 'bg-primary-container/55 text-primary',
+        accent: 'text-primary',
+        note: 'Strength day',
+      },
+      cardio: {
+        shell: 'border-orange-200 bg-gradient-to-br from-orange-100/70 via-white to-orange-50/80',
+        badge: 'bg-orange-500 text-white',
+        tint: 'bg-orange-100/90 text-orange-600',
+        accent: 'text-orange-500',
+        note: 'Cardio day',
+      },
+      rest: {
+        shell: 'border-blue-200 bg-gradient-to-br from-blue-100/70 via-white to-blue-50/80',
+        badge: 'bg-blue-500 text-white',
+        tint: 'bg-blue-100/90 text-blue-600',
+        accent: 'text-blue-500',
+        note: 'Recovery day',
+      },
+    }[todayDay.type]
+    : null;
 
   const handleStartWorkout = () => {
     if (!activePlan || !todayDay) return;
@@ -33,7 +58,10 @@ const Home: React.FC = () => {
         {/* Today Hero */}
         <section>
           <div className="flex items-center justify-between gap-4 mb-6">
-            <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary italic uppercase">Today</h2>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.35em] text-on-surface-variant opacity-40 mb-2">Daily focus</p>
+              <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary italic uppercase">Today</h2>
+            </div>
             {activePlan && (
               <button
                 onClick={skipDay}
@@ -46,67 +74,87 @@ const Home: React.FC = () => {
           </div>
 
           {activePlan && todayDay ? (
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-xl border border-surface-container-low group transition-all duration-500">
-              <div className="absolute inset-0 opacity-[0.03] bg-[url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center group-hover:scale-110 transition-transform duration-700"></div>
+            <div className={`relative overflow-hidden rounded-[2.75rem] border shadow-xl group transition-all duration-500 ${todayTheme?.shell ?? 'bg-white border-surface-container-low'}`}>
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center opacity-[0.03] group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="absolute -right-14 -top-14 h-40 w-40 rounded-full bg-white/50 blur-3xl" />
+              <div className="absolute -bottom-10 left-10 h-28 w-28 rounded-full bg-white/35 blur-3xl" />
 
               <div className="relative p-10 flex flex-col gap-8">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black tracking-[0.3em] uppercase text-primary opacity-60">
-                      {activePlan.planName}
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-surface-container-highest" />
-                    <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${todayDay.type === 'rest' ? 'text-blue-500' : todayDay.type === 'cardio' ? 'text-orange-500' : 'text-primary'
-                      }`}>
-                      {todayDay.type} Day
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-black tracking-[0.3em] uppercase text-primary opacity-60 block mb-2 truncate">
+                        {activePlan.planName}
+                      </span>
+                      <h3 className="font-headline text-4xl font-black text-on-surface uppercase italic tracking-tighter leading-none break-words">
+                        {todayDay.name}
+                      </h3>
+                    </div>
+                    <span className={`inline-flex shrink-0 items-center rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${todayTheme?.badge ?? 'bg-primary text-white'}`}>
+                      {todayTheme?.note ?? todayDay.type}
                     </span>
                   </div>
 
-                  <h3 className="font-headline text-4xl font-black text-on-surface uppercase italic tracking-tighter">
-                    {todayDay.name}
-                  </h3>
-
-                  <p className="text-on-surface-variant font-bold text-sm opacity-50 uppercase tracking-widest">
-                    {todayDay.type === 'rest' ? 'Recovery is part of the process' : `Focus: ${todayDay.focus.join(' • ')}`}
-                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className={`rounded-2xl px-4 py-3 ${todayTheme?.tint ?? 'bg-primary-container/55 text-primary'}`}>
+                      <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Mode</span>
+                      <span className="text-sm font-black uppercase break-words">{todayDay.type}</span>
+                    </div>
+                    <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm border border-white/70">
+                      <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Focus</span>
+                      <span className="text-sm font-black uppercase text-on-surface break-words">{todayDay.type === 'rest' ? 'Recovery' : todayDay.focus[0] || 'Full body'}</span>
+                    </div>
+                    <div className="rounded-2xl bg-white/80 px-4 py-3 shadow-sm border border-white/70">
+                      <span className="block text-[8px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">Items</span>
+                      <span className="text-sm font-black uppercase text-on-surface">{todayDay.type === 'rest' ? '0' : todayDay.exercises.length}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {todayDay.type === 'rest' ? (
                   <div className="space-y-8">
-                    <div className="flex items-center gap-4 p-6 bg-blue-50 rounded-3xl border border-blue-100">
-                      <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
+                    <div className="flex items-center gap-4 p-6 bg-white/80 rounded-3xl border border-white/80 shadow-sm backdrop-blur-sm">
+                      <div className={`w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm ${todayTheme?.accent ?? 'text-blue-500'}`}>
                         <Coffee size={24} />
                       </div>
-                      <p className="text-blue-900 font-bold text-sm leading-tight">Your body needs this time to rebuild and grow stronger.</p>
+                      <p className="text-on-surface font-bold text-sm leading-tight">Your body needs this time to rebuild and come back sharper. Use the skip control only if you want to move forward.</p>
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="flex gap-8">
-                      <div className="flex items-center gap-3 text-on-surface-variant">
-                        <div className="w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shadow-inner">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="flex items-center gap-3 rounded-2xl bg-white/80 px-4 py-4 shadow-sm border border-white/70 text-on-surface-variant min-w-0">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${todayTheme?.tint ?? 'bg-primary-container/30 text-primary'}`}>
                           {todayDay.type === 'cardio' ? <Activity size={20} /> : <ListChecks size={20} />}
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0">
                           <span className="text-[10px] font-black uppercase opacity-40">Volume</span>
-                          <span className="font-black text-sm uppercase">{todayDay.exercises.length} Items</span>
+                          <span className="font-black text-sm uppercase truncate">{todayDay.exercises.length} Items</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-on-surface-variant">
-                        <div className="w-10 h-10 rounded-xl bg-primary-container/30 flex items-center justify-center text-primary shadow-inner">
+                      <div className="flex items-center gap-3 rounded-2xl bg-white/80 px-4 py-4 shadow-sm border border-white/70 text-on-surface-variant min-w-0">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${todayTheme?.tint ?? 'bg-primary-container/30 text-primary'}`}>
                           <Timer size={20} />
                         </div>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col min-w-0">
                           <span className="text-[10px] font-black uppercase opacity-40">Duration</span>
                           <span className="font-black text-sm uppercase">45 min</span>
+                        </div>
+                      </div>
+                      <div className="hidden md:flex items-center gap-3 rounded-2xl bg-white/80 px-4 py-4 shadow-sm border border-white/70 text-on-surface-variant min-w-0">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-inner ${todayTheme?.tint ?? 'bg-primary-container/30 text-primary'}`}>
+                          <Flame size={20} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[10px] font-black uppercase opacity-40">Status</span>
+                          <span className="font-black text-sm uppercase">Ready</span>
                         </div>
                       </div>
                     </div>
 
                     <button
                       onClick={handleStartWorkout}
-                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'
-                        }`}
+                      className={`w-full py-6 px-8 rounded-full text-white font-black text-xl uppercase italic tracking-widest shadow-2xl transition-all active:scale-[0.98] ${todayDay.type === 'cardio' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-primary shadow-primary/30'}`}
                     >
                       Start {todayDay.type === 'cardio' ? 'Cardio' : 'Workout'}
                     </button>
@@ -178,7 +226,7 @@ const Home: React.FC = () => {
                         }`}>
                         {nextDay.type === 'rest' ? <Coffee size={20} /> : nextDay.type === 'cardio' ? <Activity size={20} /> : <Dumbbell size={20} />}
                       </div>
-                      <h5 className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tighter mb-2">{nextDay.name}</h5>
+                      <h5 className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tighter mb-2 break-words">{nextDay.name}</h5>
                       <p className="text-on-surface-variant text-[10px] font-black uppercase tracking-[0.2em] opacity-40 leading-relaxed">
                         {nextDay.type === 'rest' ? 'Recovery Phase' : nextDay.focus.join(' • ')}
                       </p>
