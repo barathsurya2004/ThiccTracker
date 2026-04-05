@@ -80,15 +80,15 @@ const ActiveWorkout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 py-4 w-full border-b border-surface-container-low">
-        <button onClick={() => navigate('/workout')} className="p-2 hover:opacity-80 transition-opacity">
-          <X size={24} className="text-on-surface-variant" />
-        </button>
-        <h1 className="font-headline tracking-tight font-bold text-lg text-primary uppercase italic">{activePlan?.planName}</h1>
-        <div className="w-10 h-10 rounded-full bg-surface-container" />
-      </header>
+      <button
+        onClick={() => navigate('/workout')}
+        className="fixed top-6 left-6 z-50 inline-flex items-center justify-center rounded-full border border-surface-container-low bg-white/90 p-2.5 shadow-sm backdrop-blur-xl transition-opacity hover:opacity-80"
+        aria-label="Cancel workout"
+      >
+        <X size={22} className="text-on-surface-variant" />
+      </button>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-20 pb-32 max-w-lg mx-auto">
+      <main className="min-h-screen flex flex-col items-center justify-center px-8 pt-16 pb-32 max-w-lg mx-auto">
 
         {/* Focus Area */}
         <div className="text-center w-full mb-12">

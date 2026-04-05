@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Dumbbell, ArrowLeft } from 'lucide-react';
+import { Play, Dumbbell } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
 const ExerciseMode: React.FC = () => {
@@ -29,14 +29,7 @@ const ExerciseMode: React.FC = () => {
 
   return (
     <div className="pb-48 min-h-screen">
-      {/* TopAppBar */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl flex items-center px-6 py-4 w-full border-b border-surface-container-low">
-        <button onClick={() => navigate('/')} className="text-on-surface-variant p-1">
-          <ArrowLeft size={24} />
-        </button>
-      </header>
-
-      <main className="pt-24 px-6 max-w-2xl mx-auto w-full">
+      <main className="pt-12 px-6 max-w-2xl mx-auto w-full">
         <header className="mb-10">
           <div className="flex justify-between items-end mb-4">
             <h1 className="font-headline text-4xl font-black tracking-tight text-primary uppercase italic">{currentDay.name}</h1>
