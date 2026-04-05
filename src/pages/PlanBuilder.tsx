@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Activity, Coffee, User } from 'lucide-react';
-import { parseWorkout } from '../services/ai';
+import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Activity, Coffee, User, AlertCircle } from 'lucide-react';
+import { parseWorkout, WorkoutParseError } from '../services/ai';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 import type { WorkoutPlan, Exercise } from '../types/workout';
 import { useNavigate } from 'react-router-dom';
@@ -27,12 +27,14 @@ const PlanBuilder: React.FC = () => {
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
   const { plans, activePlanId, addPlan, deletePlan, setActivePlan, startQuickWorkout } = useWorkoutStore();
   const navigate = useNavigate();
 
   const handleParse = async () => {
     if (!input.trim()) return;
     setLoading(true);
+    setParseError(null);
     try {
       const result = await parseWorkout(input) as ParsedPlanInput;
       const normalizedDays = result.days.map((day, idx: number) => ({
@@ -55,7 +57,11 @@ const PlanBuilder: React.FC = () => {
       setParsed(newPlan);
     } catch (error) {
       console.error('Failed to parse workout:', error);
-      alert('Failed to parse workout. Please check your API key.');
+      if (error instanceof WorkoutParseError) {
+        setParseError(error.message);
+      } else {
+        setParseError('Something went wrong while generating your plan. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -274,6 +280,13 @@ const PlanBuilder: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
               />
 
+              {parseError && (
+                <div className="rounded-2xl border border-error/20 bg-error-container/15 px-4 py-3 text-on-error-container text-sm font-medium flex items-start gap-2">
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <span>{parseError}</span>
+                </div>
+              )}
+
               <div className="sticky bottom-4 z-20">
                 <div className="rounded-[2rem] border border-white/70 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-xl flex items-center justify-between gap-4">
                   <span className="font-black text-[9px] text-on-surface-variant uppercase tracking-[0.2em] flex items-center gap-2 opacity-55">
@@ -283,7 +296,7 @@ const PlanBuilder: React.FC = () => {
                   <button
                     onClick={handleParse}
                     disabled={loading || !input.trim()}
-                    className="bg-primary text-white px-7 py-3.5 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled"
+                    className="bg-primary text-white px-7 py-3.5 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Thinking...' : 'Generate Split'}
                   </button>

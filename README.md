@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# Thicc Tracker 😭🍑
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A workout planning and tracking app built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+The app focuses on a calm, guided training flow:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- create workout plans with AI assistance
+- run active sessions with set/rest guidance
+- log completed sessions and streaks
+- review progress in a dashboard with activity and muscle-load views
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- TypeScript
+- Vite
+- Zustand (persisted local state)
+- React Router
+- Tailwind CSS
+- Lucide icons
+- Google GenAI SDK (for plan parsing)
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 1. Install dependencies
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Set environment variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` file in the project root:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_GEMINI_API_KEY=your_api_key_here
 ```
+
+Without this key, AI plan parsing is disabled and will throw an error.
+
+### 3. Run the app
+
+```bash
+npm run dev
+```
+
+Open the local URL shown in your terminal (usually `http://localhost:5173`).
+
+## Available Scripts
+
+- `npm run dev` starts the development server
+- `npm run build` runs TypeScript build + Vite production build
+- `npm run preview` previews the production build locally
+- `npm run lint` runs ESLint
+
+## Project Structure
+
+- `src/pages` app screens (Home, Dashboard, workout flow)
+- `src/components/layout` shared layout components (navbar, backdrop, containers)
+- `src/store/useWorkoutStore.ts` main app state and workout flow actions
+- `src/services/ai.ts` AI workout plan parsing
+- `src/services/historySync.ts` backend sync stub for completed sessions
+- `src/utils/scheduler.ts` streak and activity helpers
+- `src/types/workout.ts` workout domain types
+
+## How Data Works
+
+- app state is persisted in local storage using Zustand
+- plans, active progress, and workout history survive page refreshes
+- completed sessions are recorded in history and used for streak/dashboard metrics
+- backend sync for completed workouts is currently a no-op stub in `historySync.ts`
+
+## Notes
+
+- this project currently assumes a client-side first workflow
+- if you want server sync, implement `sendCompletedWorkoutToBackend` in `src/services/historySync.ts`
+
+## License
+
+See the `LICENSE` file in the repository root.

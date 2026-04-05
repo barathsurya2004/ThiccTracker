@@ -3,6 +3,13 @@ import { GoogleGenAI } from '@google/genai';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+export class WorkoutParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'WorkoutParseError';
+  }
+}
+
 const extractJsonContent = (content: string) => {
   const trimmed = content.trim();
 
@@ -19,7 +26,7 @@ const extractJsonContent = (content: string) => {
 
 export const parseWorkout = async (input: string) => {
   if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API Key is missing. Please add VITE_GEMINI_API_KEY to your .env file.');
+    throw new WorkoutParseError('Missing API key. Add VITE_GEMINI_API_KEY in your .env file and try again.');
   }
 
   const prompt = `You are a strict JSON generator. Convert the given workout plan into structured JSON.
@@ -129,18 +136,23 @@ Return ONLY valid JSON. No comments. No markdown.
 Workout:
 ${input.trim()}`;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-flash-lite-latest',
-    contents: prompt,
-    config: {
-      temperature: 0,
-      topP: 0.1,
-      responseMimeType: 'application/json',
-    },
-  });
+  let content = '';
 
-  const content = response.text ?? '';
-  console.log(content)
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-flash-lite-latest',
+      contents: prompt,
+      config: {
+        temperature: 0,
+        topP: 0.1,
+        responseMimeType: 'application/json',
+      },
+    });
+
+    content = response.text ?? '';
+  } catch {
+    throw new WorkoutParseError('Could not reach the AI service right now. Please try again in a moment.');
+  }
 
   try {
     const jsonContent = extractJsonContent(content);
@@ -154,7 +166,7 @@ ${input.trim()}`;
     return JSON.parse(jsonContent);
   } catch {
     console.error('Gemini Raw Content:', content);
-    throw new Error('AI returned malformed JSON. Try shortening your input or simplifying the plan.');
+    throw new WorkoutParseError('I could not parse that plan format. Try a simpler format like Day 1: Squat 3x8, Bench 3x8.');
   }
 };
 
