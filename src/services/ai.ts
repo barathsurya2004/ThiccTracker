@@ -130,6 +130,7 @@ ${input.trim()}`;
   });
 
   const content = response.text ?? '';
+  console.log(content)
 
   try {
     const jsonContent = extractJsonContent(content);
