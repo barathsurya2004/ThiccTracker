@@ -80,7 +80,11 @@ const ActiveWorkout: React.FC = () => {
       return;
     }
 
-    handleTimerEnd();
+    const endTransitionTimer = window.setTimeout(() => {
+      handleTimerEnd();
+    }, 0);
+
+    return () => window.clearTimeout(endTransitionTimer);
   }, [uiState, restEndsAt, timeLeft, handleTimerEnd]);
 
   useEffect(() => {

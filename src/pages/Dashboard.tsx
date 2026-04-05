@@ -2,14 +2,13 @@ import React from 'react';
 import { Dumbbell, Flame, TrendingUp } from 'lucide-react';
 import { useWorkoutStore } from '../store/useWorkoutStore';
 
-import { calculateStreak, getWeeklyActivity } from '../utils/scheduler';
+import { calculateStreak } from '../utils/scheduler';
 import PageBackdrop from '../components/layout/PageBackdrop';
 
 const Dashboard: React.FC = () => {
   const { history } = useWorkoutStore();
 
   const currentStreak = calculateStreak(history);
-  const weeklyActivity = getWeeklyActivity(history);
 
   // 1. Calculate Muscle Focus Distribution
   const focusCounts: Record<string, number> = {};
