@@ -1,35 +1,53 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { WorkoutPlan, ActivePlan, WorkoutHistory, WorkoutDay } from '../types/workout';
+import type { WorkoutPlan, WorkoutHistory } from '../types/workout';
 
 interface WorkoutState {
-  activePlan: ActivePlan | null;
+  plans: WorkoutPlan[];
+  activePlanId: string | null;
   history: WorkoutHistory[];
-  
+
   // Execution state (current active session)
   currentExerciseIndex: number;
   currentSet: number;
 
   // Actions
-  setActivePlan: (plan: WorkoutPlan) => void;
+  addPlan: (plan: WorkoutPlan) => void;
+  deletePlan: (id: string) => void;
+  setActivePlan: (id: string) => void;
+
+  // Workout Flow
   startWorkout: () => void;
   nextSet: () => void;
   nextExercise: () => void;
   finishWorkout: () => void;
+  skipDay: () => void;
   resetActiveSession: () => void;
-}
+  }
 
-export const useWorkoutStore = create<WorkoutState>()(
+  export const useWorkoutStore = create<WorkoutState>()(
   persist(
     (set, get) => ({
-      activePlan: null,
+      plans: [],
+      activePlanId: null,
       history: [],
       currentExerciseIndex: 0,
       currentSet: 1,
 
-      setActivePlan: (plan) => set({
-        activePlan: { plan, currentIndex: 0 }
+      addPlan: (plan) => set((state) => {
+        const newPlans = [plan, ...state.plans];
+        return { 
+          plans: newPlans,
+          activePlanId: state.activePlanId || plan.id 
+        };
       }),
+
+      deletePlan: (id) => set((state) => ({
+        plans: state.plans.filter(p => p.id !== id),
+        activePlanId: state.activePlanId === id ? null : state.activePlanId
+      })),
+
+      setActivePlan: (id) => set({ activePlanId: id }),
 
       startWorkout: () => set({
         currentExerciseIndex: 0,
@@ -45,42 +63,59 @@ export const useWorkoutStore = create<WorkoutState>()(
 
       finishWorkout: () => {
         const state = get();
-        if (!state.activePlan) return;
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        if (!activePlan) return;
 
-        const currentDay = state.activePlan.plan.days[state.activePlan.currentIndex];
-        
-        // 1. Create history entry
+        const currentDay = activePlan.days[activePlan.currentIndex];
+
         const historyEntry: WorkoutHistory = {
           id: crypto.randomUUID(),
-          planId: state.activePlan.plan.id,
+          planId: activePlan.id,
+          planName: activePlan.planName,
           date: new Date().toISOString(),
           dayName: currentDay.name,
+          type: currentDay.type, // Record the type
           exercises: currentDay.exercises,
           completed: true,
           muscleFocus: currentDay.focus
         };
 
-        // 2. Advance plan index
-        const nextIndex = (state.activePlan.currentIndex + 1) % state.activePlan.plan.days.length;
+        const nextIndex = (activePlan.currentIndex + 1) % activePlan.days.length;
+        const updatedPlans = state.plans.map(p => 
+          p.id === activePlan.id ? { ...p, currentIndex: nextIndex } : p
+        );
 
-        set((state) => ({
+        set({
           history: [historyEntry, ...state.history],
-          activePlan: state.activePlan ? {
-            ...state.activePlan,
-            currentIndex: nextIndex
-          } : null,
+          plans: updatedPlans,
           currentExerciseIndex: 0,
           currentSet: 1
-        }));
+        });
       },
 
+      skipDay: () => {
+        const state = get();
+        const activePlan = state.plans.find(p => p.id === state.activePlanId);
+        if (!activePlan) return;
+
+        const nextIndex = (activePlan.currentIndex + 1) % activePlan.days.length;
+        const updatedPlans = state.plans.map(p => 
+          p.id === activePlan.id ? { ...p, currentIndex: nextIndex } : p
+        );
+
+        set({
+          plans: updatedPlans,
+          currentExerciseIndex: 0,
+          currentSet: 1
+        });
+      },
       resetActiveSession: () => set({
         currentExerciseIndex: 0,
         currentSet: 1
       }),
     }),
     {
-      name: 'workout-storage',
+      name: 'workout-storage-v2', // New key for the structural change
     }
   )
 );

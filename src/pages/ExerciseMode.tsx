@@ -5,11 +5,11 @@ import { useWorkoutStore } from '../store/useWorkoutStore';
 
 const ExerciseMode: React.FC = () => {
   const navigate = useNavigate();
-  const { activePlan } = useWorkoutStore();
+  const { plans, activePlanId } = useWorkoutStore();
 
-  const currentPlan = activePlan?.plan;
+  const activePlan = plans.find(p => p.id === activePlanId);
   const currentIndex = activePlan?.currentIndex ?? 0;
-  const currentDay = currentPlan?.days[currentIndex];
+  const currentDay = activePlan?.days[currentIndex];
 
   if (!currentDay) {
     return (

@@ -24,8 +24,7 @@ const Dashboard: React.FC = () => {
       value: totalFocusPoints > 0 ? Math.round((count / totalFocusPoints) * 100) : 0,
       count
     }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 3); // Top 3
+    .sort((a, b) => b.value - a.value); // Show all, sorted by most targeted
 
   // 2. Generate Heatmap data (last 60 days)
   const heatmapData = Array.from({ length: 60 }, (_, i) => {
@@ -77,29 +76,6 @@ const Dashboard: React.FC = () => {
               <div className="text-5xl font-black font-headline text-primary mb-1">{currentStreak}</div>
               <div className="text-on-surface-variant text-xs font-bold uppercase tracking-wider opacity-60">Day active streak</div>
             </div>
-          </div>
-        </div>
-
-        {/* Focus Distribution */}
-        <div className="bg-white rounded-3xl p-8 mb-8 border border-surface-container-low shadow-sm">
-          <h3 className="text-xs font-black text-on-surface-variant uppercase tracking-[0.2em] mb-8 opacity-60 text-center">Muscle Focus Distribution</h3>
-          <div className="space-y-6">
-            {distribution.length > 0 ? distribution.map((focus, i) => (
-              <div key={i}>
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-                  <span className="text-on-surface">{focus.label}</span>
-                  <span className="text-primary">{focus.value}%</span>
-                </div>
-                <div className="w-full bg-surface-container-low h-3 rounded-full overflow-hidden shadow-inner">
-                  <div 
-                    className={`bg-primary h-full rounded-full transition-all duration-1000`} 
-                    style={{ width: `${focus.value}%`, opacity: 1 - i * 0.3 }}
-                  />
-                </div>
-              </div>
-            )) : (
-              <p className="text-center text-on-surface-variant text-sm py-4 italic">No data yet. Start training to see your focus.</p>
-            )}
           </div>
         </div>
 

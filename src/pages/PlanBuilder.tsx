@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Sparkles, Dumbbell, Trash, Check, Calendar, ArrowRight } from 'lucide-react';
+import { Sparkles, Dumbbell, Check, Calendar, Trash2, PlayCircle, Plus, Edit2, Timer, Hash, Repeat, ArrowRight } from 'lucide-react';
 import { parseWorkout } from '../services/ai';
 import { useWorkoutStore } from '../store/useWorkoutStore';
-import type { WorkoutPlan } from '../types/workout';
+import type { WorkoutPlan, Exercise } from '../types/workout';
 import { useNavigate } from 'react-router-dom';
 
 const PlanBuilder: React.FC = () => {
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(false);
-  const { setActivePlan } = useWorkoutStore();
+  const { plans, activePlanId, addPlan, deletePlan, setActivePlan } = useWorkoutStore();
   const navigate = useNavigate();
 
   const handleParse = async () => {
@@ -20,12 +20,18 @@ const PlanBuilder: React.FC = () => {
       const newPlan: WorkoutPlan = {
         ...result,
         id: crypto.randomUUID(),
+        cycleLength: result.days.length,
+        days: result.days.map((day: any, idx: number) => ({
+          ...day,
+          dayIndex: idx
+        })),
+        currentIndex: 0,
         createdAt: new Date().toISOString(),
       };
       setParsed(newPlan);
     } catch (error) {
       console.error('Failed to parse workout:', error);
-      alert('Failed to parse workout. Please check your API key and input format.');
+      alert('Failed to parse workout. Please check your API key.');
     } finally {
       setLoading(false);
     }
@@ -33,96 +39,276 @@ const PlanBuilder: React.FC = () => {
 
   const handleSave = () => {
     if (parsed) {
-      setActivePlan(parsed);
-      navigate('/');
+      addPlan(parsed);
+      setParsed(null);
+      setInput('');
     }
+  };
+
+  const updateExercise = (dayIdx: number, exIdx: number, field: keyof Exercise, value: any) => {
+    if (!parsed) return;
+    const newPlan = { ...parsed };
+    const newDays = [...newPlan.days];
+    const newDay = { ...newDays[dayIdx] };
+    const newExercises = [...newDay.exercises];
+
+    newExercises[exIdx] = { ...newExercises[exIdx], [field]: value };
+    newDay.exercises = newExercises;
+    newDays[dayIdx] = newDay;
+    newPlan.days = newDays;
+
+    setParsed(newPlan);
+  };
+
+  const deleteExercise = (dayIdx: number, exIdx: number) => {
+    if (!parsed) return;
+    const newPlan = { ...parsed };
+    const newDays = [...newPlan.days];
+    const newDay = { ...newDays[dayIdx] };
+    newDay.exercises = newDay.exercises.filter((_, i) => i !== exIdx);
+    newDays[dayIdx] = newDay;
+    newPlan.days = newDays;
+    setParsed(newPlan);
   };
 
   return (
     <div className="pb-32 min-h-screen">
-      <main className="px-6 pt-16 max-w-2xl mx-auto">
-        <section className="mb-10">
-          <h2 className="font-headline font-extrabold text-4xl tracking-tight text-primary mb-2 italic uppercase">Build Your Plan</h2>
-          <p className="font-body text-on-surface-variant text-lg opacity-70 font-medium">Speak or type your routine. AI will handle the rest.</p>
-        </section>
+      <main className="px-6 pt-16 max-w-2xl mx-auto space-y-12">
 
-        {/* Input Area */}
-        <div className="bg-white rounded-3xl p-6 mb-12 border border-surface-container-low shadow-sm transition-all duration-300">
-          <div className="flex flex-col gap-4">
-            <textarea
-              className="w-full h-48 bg-background border-none focus:ring-2 focus:ring-primary/20 rounded-2xl p-6 font-body text-lg text-on-surface placeholder:text-outline-variant resize-none leading-relaxed shadow-inner"
-              placeholder="E.g. Push Pull Legs split. Day 1: Bench 3x10, Squat 5x5..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <div className="flex justify-between items-center">
-              <span className="font-black text-[10px] text-on-surface-variant uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
-                <Sparkles size={14} className="text-primary" />
-                Smart AI Parser
+        {/* 1. Manage Existing Plans */}
+        {plans.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6 px-2">
+              <h2 className="font-headline font-black text-2xl text-primary uppercase italic tracking-tight">Your Plans</h2>
+              <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant bg-surface-container px-3 py-1 rounded-full">
+                {plans.length} Collections
               </span>
-              <button
-                onClick={handleParse}
-                disabled={loading || !input.trim()}
-                className="bg-primary text-white px-8 py-4 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
-              >
-                {loading ? 'Analyzing...' : 'Generate Plan'}
-              </button>
+            </div>
+
+            <div className="space-y-4">
+              {plans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`bg-white p-6 rounded-[2rem] border transition-all ${activePlanId === plan.id
+                      ? 'border-primary ring-4 ring-primary/5 shadow-md'
+                      : 'border-surface-container-low opacity-70 hover:opacity-100'
+                    }`}
+                >
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h3 className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tighter mb-1">{plan.planName}</h3>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">
+                        {plan.days.length} Day Cycle • Progress: Day {plan.currentIndex + 1}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => deletePlan(plan.id)}
+                      className="text-on-surface-variant/20 hover:text-red-500 transition-colors p-2"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {activePlanId === plan.id ? (
+                      <div className="flex-1 bg-primary text-white py-3 rounded-full font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                        <Check size={14} />
+                        Active
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActivePlan(plan.id)}
+                        className="flex-1 bg-primary-container text-primary py-3 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-primary/10 transition-colors"
+                      >
+                        Set Active
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setActivePlan(plan.id);
+                        navigate('/workout');
+                      }}
+                      className="px-6 bg-white border border-surface-container-low rounded-full text-primary hover:bg-surface-container-low transition-colors"
+                    >
+                      <PlayCircle size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 2. Create New Plan */}
+        <section>
+          <div className="mb-8">
+            <h2 className="font-headline font-black text-2xl text-primary uppercase italic tracking-tight mb-2">Create New Plan</h2>
+            <p className="font-body text-on-surface-variant text-sm opacity-60 font-medium">Use AI to generate a structured workout split.</p>
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] p-8 border border-surface-container-low shadow-sm transition-all duration-300">
+            <div className="flex flex-col gap-4">
+              <textarea
+                className="w-full h-40 bg-background border-none focus:ring-2 focus:ring-primary/20 rounded-2xl p-6 font-body text-lg text-on-surface placeholder:text-outline-variant resize-none leading-relaxed shadow-inner"
+                placeholder="E.g. Upper/Lower split for 4 days..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
+              <div className="flex justify-between items-center">
+                <span className="font-black text-[9px] text-on-surface-variant uppercase tracking-[0.2em] flex items-center gap-2 opacity-40">
+                  <Sparkles size={12} className="text-primary" />
+                  AI Logic
+                </span>
+                <button
+                  onClick={handleParse}
+                  disabled={loading || !input.trim()}
+                  className="bg-primary text-white px-8 py-4 rounded-full font-headline font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Thinking...' : 'Generate Split'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Parsed Result */}
+        {/* 3. AI Preview & Edit */}
         {parsed && (
-          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center justify-between px-2">
+          <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary opacity-60">Plan Name</span>
-                <h3 className="font-headline font-black text-3xl text-on-surface uppercase italic tracking-tighter">{parsed.planName}</h3>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary opacity-60">Generated Plan</span>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={parsed.planName}
+                    onChange={(e) => setParsed({ ...parsed, planName: e.target.value })}
+                    className="font-headline font-black text-3xl text-on-surface uppercase italic tracking-tighter bg-transparent border-none p-0 focus:ring-0 w-full"
+                  />
+                  <Edit2 size={18} className="text-primary opacity-40" />
+                </div>
               </div>
               <button
                 onClick={handleSave}
-                className="bg-primary-container text-primary px-6 py-3 rounded-full font-black text-xs uppercase tracking-widest flex items-center gap-2 border border-primary/10 shadow-sm"
+                className="bg-primary text-white px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
               >
-                <Check size={16} />
-                Save Plan
+                <Plus size={18} />
+                Save to My Plans
               </button>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-12">
               {parsed.days.map((day, dIdx) => (
-                <div key={dIdx} className="space-y-4">
-                  <div className="flex items-center gap-3 px-2">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-black text-xs">
-                      {dIdx + 1}
+                <div key={dIdx} className="space-y-6">
+                  <div className="flex items-center gap-4 px-2">
+                    <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-black text-sm italic">
+                      D{dIdx + 1}
                     </div>
-                    <h4 className="font-headline font-black text-xl text-on-surface uppercase tracking-tight">{day.name}</h4>
-                    <span className="bg-surface-container-low px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest opacity-50">
-                      {day.focus.join(' • ')}
-                    </span>
+                    <input
+                      type="text"
+                      value={day.name}
+                      onChange={(e) => {
+                        const newDays = [...parsed.days];
+                        newDays[dIdx] = { ...day, name: e.target.value };
+                        setParsed({ ...parsed, days: newDays });
+                      }}
+                      className="font-headline font-black text-xl text-on-surface uppercase italic tracking-tight bg-transparent border-none p-0 focus:ring-0 flex-1"
+                    />
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {day.exercises.map((ex, eIdx) => (
-                      <div key={eIdx} className="bg-white p-5 rounded-3xl border border-surface-container-low shadow-sm flex items-center justify-between group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary group-hover:scale-110 transition-transform shadow-inner">
-                            <Dumbbell size={20} />
+                      <div key={eIdx} className="bg-white p-6 rounded-[2rem] border border-surface-container-low shadow-sm flex flex-col gap-6 group hover:border-primary/20 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary shadow-inner">
+                              <Dumbbell size={20} />
+                            </div>
+                            <input
+                              type="text"
+                              value={ex.name}
+                              onChange={(e) => updateExercise(dIdx, eIdx, 'name', e.target.value)}
+                              className="font-headline font-bold text-base text-on-surface uppercase tracking-tight bg-transparent border-none p-0 focus:ring-0 w-full"
+                            />
                           </div>
-                          <div>
-                            <h5 className="font-headline font-bold text-sm text-on-surface uppercase">{ex.name}</h5>
-                            <span className="text-[9px] font-black uppercase text-on-surface-variant opacity-40 tracking-widest">
-                              {ex.type} • {ex.muscleGroup[0]}
-                            </span>
-                          </div>
+                          <button
+                            onClick={() => deleteExercise(dIdx, eIdx)}
+                            className="text-on-surface-variant/20 hover:text-red-500 transition-colors p-2"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <span className="block text-[8px] font-black uppercase text-on-surface-variant opacity-40">Sets x Reps</span>
-                            <span className="font-black text-lg text-primary">{ex.sets} × {ex.reps}</span>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="bg-background rounded-2xl p-3 flex flex-col gap-1 border border-surface-container-low">
+                            <label className="flex items-center gap-1.5 text-[8px] font-black uppercase text-on-surface-variant opacity-40">
+                              <Hash size={10} /> Sets
+                            </label>
+                            <input
+                              type="number"
+                              value={ex.sets}
+                              onChange={(e) => updateExercise(dIdx, eIdx, 'sets', parseInt(e.target.value) || 0)}
+                              className="font-black text-lg text-primary bg-transparent border-none p-0 focus:ring-0 w-full"
+                            />
+                          </div>
+                          <div className="bg-background rounded-2xl p-3 flex flex-col gap-1 border border-surface-container-low">
+                            <label className="flex items-center gap-1.5 text-[8px] font-black uppercase text-on-surface-variant opacity-40">
+                              <Repeat size={10} /> Reps
+                            </label>
+                            <input
+                              type="text"
+                              value={ex.reps}
+                              onChange={(e) => updateExercise(dIdx, eIdx, 'reps', e.target.value)}
+                              className="font-black text-lg text-primary bg-transparent border-none p-0 focus:ring-0 w-full"
+                            />
+                          </div>
+                          <div className="bg-background rounded-2xl p-3 flex flex-col gap-1 border border-surface-container-low">
+                            <label className="flex items-center gap-1.5 text-[8px] font-black uppercase text-on-surface-variant opacity-40">
+                              <Timer size={10} /> Set Rest
+                            </label>
+                            <input
+                              type="number"
+                              value={ex.setRest}
+                              onChange={(e) => updateExercise(dIdx, eIdx, 'setRest', parseInt(e.target.value) || 0)}
+                              className="font-black text-lg text-primary bg-transparent border-none p-0 focus:ring-0 w-full"
+                            />
+                          </div>
+                          <div className="bg-background rounded-2xl p-3 flex flex-col gap-1 border border-surface-container-low">
+                            <label className="flex items-center gap-1.5 text-[8px] font-black uppercase text-on-surface-variant opacity-40">
+                              <Timer size={10} /> Ex. Rest
+                            </label>
+                            <input
+                              type="number"
+                              value={ex.exerciseRest}
+                              onChange={(e) => updateExercise(dIdx, eIdx, 'exerciseRest', parseInt(e.target.value) || 0)}
+                              className="font-black text-lg text-primary bg-transparent border-none p-0 focus:ring-0 w-full"
+                            />
                           </div>
                         </div>
                       </div>
                     ))}
+
+                    <button
+                      onClick={() => {
+                        const newEx: Exercise = {
+                          name: 'New Exercise',
+                          sets: 3,
+                          reps: '10',
+                          setRest: 60,
+                          exerciseRest: 60,
+                          muscleGroup: ['Misc'],
+                          secondaryMuscles: [],
+                          intensity: 'medium',
+                          type: 'isolation'
+                        };
+                        const newDays = [...parsed.days];
+                        newDays[dIdx].exercises.push(newEx);
+                        setParsed({ ...parsed, days: newDays });
+                      }}
+                      className="w-full py-4 border-2 border-dashed border-surface-container-high rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/40 hover:text-primary hover:border-primary/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Plus size={14} />
+                      Add Exercise to {day.name}
+                    </button>
                   </div>
                 </div>
               ))}
