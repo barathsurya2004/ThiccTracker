@@ -1,29 +1,56 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import MainLayout from './components/layout/MainLayout';
-import Home from './pages/Home';
-import PlanBuilder from './pages/PlanBuilder';
-import ExerciseMode from './pages/ExerciseMode';
-import ActiveWorkout from './pages/ActiveWorkout';
-import Dashboard from './pages/Dashboard';
-import WorkoutComplete from './pages/WorkoutComplete';
+import { useEffect } from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import TabBar from './components/TabBar';
+import LoginScreen from './screens/LoginScreen';
+import HomeScreen from './screens/HomeScreen';
+import PlanScreen from './screens/PlanScreen';
+import WorkoutScreen from './screens/WorkoutScreen';
+import DashboardScreen from './screens/DashboardScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
-const App: React.FC = () => {
+function Root() {
+  const { screen, isAuthed } = useApp();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme && savedTheme !== 'system') {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    const savedAccent = localStorage.getItem('accent-name');
+    const savedHue = localStorage.getItem('accent-hue');
+    if (savedAccent && savedHue) {
+      const isLime = savedAccent === 'Lime';
+      document.documentElement.style.setProperty('--accent', `oklch(${isLime ? '0.88 0.19' : '0.74 0.17'} ${savedHue})`);
+      document.documentElement.style.setProperty('--accent-ink', isLime ? 'oklch(0.20 0.05 130)' : 'oklch(0.99 0.005 240)');
+    }
+  }, []);
+
+  const renderScreen = () => {
+    if (!isAuthed || screen === 'login') return <LoginScreen />;
+    switch (screen) {
+      case 'home':      return <HomeScreen />;
+      case 'plan':      return <PlanScreen />;
+      case 'workout':   return <WorkoutScreen />;
+      case 'dashboard': return <DashboardScreen />;
+      case 'settings':  return <SettingsScreen />;
+      default:          return <HomeScreen />;
+    }
+  };
+
+  const showTabs = isAuthed && screen !== 'login';
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="plan" element={<PlanBuilder />} />
-          <Route path="workout" element={<ExerciseMode />} />
-          <Route path="dashboard" element={<Dashboard />} />
-        </Route>
-        {/* Active workout mode is fullscreen, no navbar */}
-        <Route path="workout/active" element={<ActiveWorkout />} />
-        <Route path="workout/complete" element={<WorkoutComplete />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="app">
+      {renderScreen()}
+      {showTabs && <TabBar />}
+    </div>
   );
-};
+}
 
-export default App;
+export default function App() {
+  return (
+    <AppProvider>
+      <Root />
+    </AppProvider>
+  );
+}
