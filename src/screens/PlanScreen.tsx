@@ -338,7 +338,7 @@ export default function PlanScreen() {
 
   if (view === 'edit' && editing) {
     return (
-      <div className="screen">
+      <div className="screen no-tab">
         <TopNav title="Edit plan"
           left={<button className="btn icon" onClick={() => setView('library')} aria-label="Back" style={{ marginRight: 4 }}><ChevLeft width={16} height={16} /></button>}
           right={<button className="btn compact primary" onClick={() => setView('library')} style={{ width: 'auto' }}>Done</button>}
@@ -352,7 +352,7 @@ export default function PlanScreen() {
   }
 
   return (
-    <div className="screen">
+    <div className={`screen${aiOpen ? ' no-tab' : ''}`}>
       <TopNav title="Plans" right={
         <button className="btn icon" onClick={() => setAIOpen(true)} aria-label="AI Builder"
           style={{ background: 'var(--accent)', color: 'var(--accent-ink)', border: 'none' }}>
