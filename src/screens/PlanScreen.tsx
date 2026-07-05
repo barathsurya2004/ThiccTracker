@@ -4,7 +4,6 @@ import type { Plan, WorkoutDay, Exercise } from '../context/AppContext';
 import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
 import { generatePlan } from '../utils/gemini';
-import { BannerAd, InterstitialGate, RewardedGate } from '../components/AdSlot';
 import { Sparkles, Plus, Trash, Check, ChevDown, ChevLeft } from '../components/Icons';
 
 /* ── AI Generate Modal ── */
@@ -13,8 +12,6 @@ function AIGenerateModal({ onClose, onCreate }: {
   onCreate: (plan: Omit<Plan, 'id'>) => void;
 }) {
   const { isGuest } = useApp();
-  const [unlocked, setUnlocked] = useState(false);
-  const [showSaveInterstitial, setShowSaveInterstitial] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [step, setStep] = useState<'input' | 'generating' | 'review' | 'error'>('input');
   const [draft, setDraft] = useState<Omit<Plan, 'id'> | null>(null);
@@ -45,21 +42,18 @@ function AIGenerateModal({ onClose, onCreate }: {
     }
   };
 
-  const finalizeCreate = () => {
+  const accept = () => {
     if (draft) onCreate(draft);
     setStep('input'); setPrompt(''); setDraft(null); setErrorMsg('');
-    setShowSaveInterstitial(false);
     onClose();
   };
-
-  const accept = () => setShowSaveInterstitial(true);
 
   const reset = () => { setStep('input'); setErrorMsg(''); setDraft(null); };
 
   if (isGuest) {
     return (
-      <div className="ad-modal enter">
-        <div className="ad-modal-card">
+      <div className="modal-overlay enter">
+        <div className="modal-card">
           <div className="t-h3">Sign in to use AI</div>
           <div className="t-small dim" style={{ marginTop: 6 }}>
             The AI plan builder needs an account. Guests can still build plans manually.
@@ -68,14 +62,6 @@ function AIGenerateModal({ onClose, onCreate }: {
         </div>
       </div>
     );
-  }
-
-  if (!unlocked) {
-    return <RewardedGate onUnlock={() => setUnlocked(true)} onDismiss={onClose} />;
-  }
-
-  if (showSaveInterstitial) {
-    return <InterstitialGate title="Your plan is ready." onDone={finalizeCreate} />;
   }
 
   return (
@@ -349,13 +335,10 @@ export default function PlanScreen() {
   const latestPlans = useRef(plans);
   latestPlans.current = plans;
 
-  const [showCreateInterstitial, setShowCreateInterstitial] = useState(false);
-
   const editing = useMemo(() => plans.find(p => p.id === editingId) ?? null, [plans, editingId]);
   const openEdit = (id: string) => { setEditingId(id); setView('edit'); };
 
-  const finalizeCreateBlank = () => {
-    setShowCreateInterstitial(false);
+  const createBlank = () => {
     const plan: Omit<Plan, 'id'> = {
       name: 'New plan', source: 'Manual', isActive: false,
       createdAt: new Date().toISOString().slice(0, 10),
@@ -367,8 +350,6 @@ export default function PlanScreen() {
       if (p) openEdit(p.id);
     }, 50);
   };
-
-  const createBlank = () => setShowCreateInterstitial(true);
 
   if (view === 'edit' && editing) {
     return (
@@ -473,12 +454,9 @@ export default function PlanScreen() {
             </div>
           </div>
         )}
-
-        <BannerAd />
       </div>
 
       {aiOpen && <AIGenerateModal onClose={() => setAIOpen(false)} onCreate={plan => addPlan(plan)} />}
-      {showCreateInterstitial && <InterstitialGate title="Let's build your plan." onDone={finalizeCreateBlank} />}
     </div>
   );
 }

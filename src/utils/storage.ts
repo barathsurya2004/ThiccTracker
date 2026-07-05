@@ -32,7 +32,6 @@ export const KEYS = {
   hasCompletedSetup: 'tn_has_completed_setup',
   hasSeenWorkoutTutorial: 'tn_has_seen_workout_tutorial',
   deloadDismissedAt: 'tn_deload_dismissed_at',
-  adsDisabled: 'tn_ads_disabled',
   notifPrefs: 'tn_notif_prefs',
   weeklySummaryShownWeek: 'tn_weekly_summary_shown_week',
   userProfile: 'tn_user_profile',

@@ -93,8 +93,6 @@ interface AppContextValue {
   setHasSeenWorkoutTutorial: React.Dispatch<React.SetStateAction<boolean>>;
   deloadDismissedAt: number;
   setDeloadDismissedAt: React.Dispatch<React.SetStateAction<number>>;
-  adsDisabled: boolean;
-  setAdsDisabled: React.Dispatch<React.SetStateAction<boolean>>;
   notifPrefs: NotifPrefs;
   setNotifPrefs: React.Dispatch<React.SetStateAction<NotifPrefs>>;
   weeklySummaryShownWeek: string;
@@ -151,7 +149,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasCompletedSetup, setHasCompletedSetup] = useState(() => load<boolean>(KEYS.hasCompletedSetup, false));
   const [hasSeenWorkoutTutorial, setHasSeenWorkoutTutorial] = useState(() => load<boolean>(KEYS.hasSeenWorkoutTutorial, false));
   const [deloadDismissedAt, setDeloadDismissedAt] = useState(() => load<number>(KEYS.deloadDismissedAt, 0));
-  const [adsDisabled, setAdsDisabled] = useState(() => load<boolean>(KEYS.adsDisabled, false));
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(() => load<NotifPrefs>(KEYS.notifPrefs, DEFAULT_NOTIF_PREFS));
   const [weeklySummaryShownWeek, setWeeklySummaryShownWeek] = useState(() => load<string>(KEYS.weeklySummaryShownWeek, ''));
   const [weeklySummaryBanner, setWeeklySummaryBanner] = useState<{ sessions: number; tonnage: number } | null>(null);
@@ -173,7 +170,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { save(KEYS.hasCompletedSetup, hasCompletedSetup); }, [hasCompletedSetup]);
   useEffect(() => { save(KEYS.hasSeenWorkoutTutorial, hasSeenWorkoutTutorial); }, [hasSeenWorkoutTutorial]);
   useEffect(() => { save(KEYS.deloadDismissedAt, deloadDismissedAt); }, [deloadDismissedAt]);
-  useEffect(() => { save(KEYS.adsDisabled, adsDisabled); }, [adsDisabled]);
   useEffect(() => { save(KEYS.notifPrefs, notifPrefs); }, [notifPrefs]);
   useEffect(() => { save(KEYS.weeklySummaryShownWeek, weeklySummaryShownWeek); }, [weeklySummaryShownWeek]);
   useEffect(() => { if (isAuthed && !isGuest) save(KEYS.userProfile, userProfile); }, [userProfile, isAuthed, isGuest]);
@@ -266,7 +262,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       hasCompletedSetup, setHasCompletedSetup,
       hasSeenWorkoutTutorial, setHasSeenWorkoutTutorial,
       deloadDismissedAt, setDeloadDismissedAt,
-      adsDisabled, setAdsDisabled,
       notifPrefs, setNotifPrefs,
       weeklySummaryShownWeek, setWeeklySummaryShownWeek,
       weeklySummaryBanner, dismissWeeklySummaryBanner,

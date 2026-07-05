@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useApp, weekDates, todayStr } from '../context/AppContext';
 import type { WorkoutEntry } from '../context/AppContext';
 import { getCurrentStreak, shouldRecommendDeload, STREAK_MILESTONES } from '../utils/progress';
-import { BannerAd } from '../components/AdSlot';
 import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
 import { User, Fire, Check, Play, Skip, Chart, Plan, Plus } from '../components/Icons';
@@ -318,8 +317,6 @@ export default function HomeScreen() {
             Edit plan
           </button>
         </div>
-
-        <BannerAd />
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
 import TutorialOverlay from '../components/TutorialOverlay';
 import type { TutorialStep } from '../components/TutorialOverlay';
-import { InterstitialGate } from '../components/AdSlot';
 import { Play, Check, Close, Arrow, Rest, ArrowUp, Chart, Plus, Trophy, Drag, Share } from '../components/Icons';
 
 /* ── Reorder sheet: reorder upcoming exercises with up/down arrows, session-local only ── */
@@ -27,7 +26,7 @@ function ReorderSheet({ locked, movable, onConfirm, onClose }: {
   };
 
   return (
-    <div className="ad-modal enter" style={{ alignItems: 'flex-end' }}>
+    <div className="modal-overlay enter" style={{ alignItems: 'flex-end' }}>
       <div className="card" style={{ width: '100%', maxWidth: 420, padding: 0, maxHeight: '70vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div className="t-h3" style={{ padding: '16px 16px 8px' }}>Reorder exercises</div>
         <div className="t-small dim" style={{ padding: '0 16px 8px' }}>Completed and current exercises stay locked in place.</div>
@@ -160,7 +159,6 @@ export default function WorkoutScreen() {
   const [prExWeight, setPrExWeight] = useState(0);
   const [sessionExercises, setSessionExercises] = useState<Exercise[] | null>(null);
   const [showReorderSheet, setShowReorderSheet] = useState(false);
-  const [doneInterstitialPassed, setDoneInterstitialPassed] = useState(false);
   const startedAt = useRef<number | null>(null);
   const restEndsAt = useRef<number | null>(null);
   const restTotal = useRef<number>(60);
@@ -227,7 +225,6 @@ export default function WorkoutScreen() {
     setPhase('active');
     setExIdx(0); setSetIdx(0);
     setSessionExercises(todayWorkout ? [...todayWorkout.exercises] : null);
-    setDoneInterstitialPassed(false);
     const firstName = exercises[0]?.name?.toLowerCase() || '';
     setWeight(firstName.includes('squat') ? 80 : firstName.includes('deadlift') ? 120 : 60);
     setReps(8);
@@ -554,10 +551,6 @@ export default function WorkoutScreen() {
 
   /* ── Done ── */
   if (phase === 'done') {
-    if (!doneInterstitialPassed) {
-      return <InterstitialGate title="Your workout is saved." onDone={() => setDoneInterstitialPassed(true)} />;
-    }
-
     const durationMin = startedAt.current ? Math.max(1, Math.round((Date.now() - startedAt.current) / 60000)) : 1;
     const totalReps = completedSets.reduce((a,s) => a + s.reps, 0);
     const totalVolume = completedSets.reduce((a,s) => a + s.weight * s.reps, 0);
