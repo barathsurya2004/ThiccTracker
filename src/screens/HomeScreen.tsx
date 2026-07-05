@@ -1,9 +1,13 @@
 import { useMemo } from 'react';
 import { useApp, weekDates, todayStr } from '../context/AppContext';
 import type { WorkoutEntry } from '../context/AppContext';
+import { getCurrentStreak, shouldRecommendDeload, STREAK_MILESTONES } from '../utils/progress';
+import { BannerAd } from '../components/AdSlot';
 import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
 import { User, Fire, Check, Play, Skip, Chart, Plan, Plus } from '../components/Icons';
+
+const DELOAD_SUPPRESS_MS = 7 * 24 * 60 * 60 * 1000;
 
 /* ─── Streak strip ─── */
 interface StreakDay { date: string; label: string; status: 'done' | 'rest' | 'today' | 'upcoming' | 'skipped'; }
@@ -79,28 +83,33 @@ function useWeeklyStats(history: WorkoutEntry[]) {
   }, [history]);
 }
 
-function useStreak(history: WorkoutEntry[]): number {
-  return useMemo(() => {
-    if (!history.length) return 0;
-    const doneSet = new Set(history.filter(e => !e.isRestDay).map(e => e.date));
-    let streak = 0;
-    const d = new Date();
-    d.setDate(d.getDate() - 1); // start from yesterday
-    for (let i = 0; i < 365; i++) {
-      const key = d.toISOString().slice(0, 10);
-      if (doneSet.has(key)) { streak++; d.setDate(d.getDate() - 1); }
-      else break;
-    }
-    return streak;
-  }, [history]);
+function WeeklySummaryBanner({ sessions, tonnage, onDismiss }: { sessions: number; tonnage: number; onDismiss: () => void }) {
+  return (
+    <div className="card enter" style={{ borderColor: 'color-mix(in oklch, var(--accent) 30%, var(--hairline))' }}>
+      <div className="between">
+        <div>
+          <div className="t-caps">Week done</div>
+          <div className="t-body" style={{ marginTop: 4 }}>
+            {sessions} session{sessions !== 1 ? 's' : ''} · {tonnage.toLocaleString()}kg lifted last week
+          </div>
+        </div>
+        <button className="btn icon ghost" onClick={onDismiss} aria-label="Dismiss">✕</button>
+      </div>
+    </div>
+  );
 }
 
 /* ─── Screen ─── */
 export default function HomeScreen() {
-  const { user, activePlan, todayWorkout, todayDayIndex, skipToday, setScreen, workoutHistory } = useApp();
+  const { user, activePlan, todayWorkout, todayDayIndex, skipToday, setScreen, workoutHistory, deloadDismissedAt, setDeloadDismissedAt, weeklySummaryBanner, dismissWeeklySummaryBanner } = useApp();
   const streakDays = useStreakDays(workoutHistory, activePlan, todayDayIndex);
   const { tonnage, sessions } = useWeeklyStats(workoutHistory);
-  const streak = useStreak(workoutHistory);
+  const streak = useMemo(() => getCurrentStreak(workoutHistory), [workoutHistory]);
+  const isMilestone = STREAK_MILESTONES.includes(streak);
+  const showDeload = useMemo(
+    () => shouldRecommendDeload(workoutHistory) && (Date.now() - deloadDismissedAt > DELOAD_SUPPRESS_MS),
+    [workoutHistory, deloadDismissedAt]
+  );
 
   const dateText = useMemo(() => {
     return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
@@ -127,7 +136,8 @@ export default function HomeScreen() {
         <TopNav right={
           <button className="btn icon" onClick={() => setScreen('settings')} aria-label="Profile"><User width={18} height={18} /></button>
         } />
-        <div className="section" style={{ paddingTop: 40 }}>
+        <div className="section stack-16" style={{ paddingTop: 40 }}>
+          {weeklySummaryBanner && <WeeklySummaryBanner {...weeklySummaryBanner} onDismiss={dismissWeeklySummaryBanner} />}
           <div className="t-caps">{dateText}</div>
           <div className="t-h1" style={{ marginTop: 6 }}>Hey {user.name.split(' ')[0] || 'there'}.</div>
           <div style={{ height: 32 }} />
@@ -156,6 +166,8 @@ export default function HomeScreen() {
       } />
 
       <div className="section stack-24" style={{ paddingTop: 12 }}>
+        {weeklySummaryBanner && <WeeklySummaryBanner {...weeklySummaryBanner} onDismiss={dismissWeeklySummaryBanner} />}
+
         <div>
           <div className="t-caps">{dateText}</div>
           <div className="t-h1" style={{ marginTop: 6 }}>Hey {user.name.split(' ')[0] || 'there'}.</div>
@@ -213,13 +225,32 @@ export default function HomeScreen() {
           </div>
         </div>
 
+        {/* Deload recommendation */}
+        {showDeload && (
+          <div className="card" style={{ background: 'color-mix(in oklch, var(--warn) 10%, var(--surface))', borderColor: 'color-mix(in oklch, var(--warn) 30%, transparent)' }}>
+            <div className="row" style={{ gap: 10, alignItems: 'flex-start' }}>
+              <Fire width={20} height={20} style={{ color: 'var(--warn)', flexShrink: 0, marginTop: 2 }} />
+              <div style={{ flex: 1 }}>
+                <div className="t-h3">Consider a deload week</div>
+                <div className="t-small dim" style={{ marginTop: 4 }}>
+                  You've trained at high intensity 4 of the last 5 days. A lighter week now protects next block's gains.
+                </div>
+                <div className="row" style={{ gap: 8, marginTop: 12 }}>
+                  <button className="btn compact" onClick={() => setScreen('dashboard')} style={{ width: 'auto' }}>See volume</button>
+                  <button className="btn compact ghost" onClick={() => setDeloadDismissedAt(Date.now())} style={{ width: 'auto' }}>Dismiss</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Weekly streak */}
         <div>
           <div className="between" style={{ marginBottom: 10 }}>
             <div className="t-caps">This week</div>
             {streak > 0 && (
               <div className="row" style={{ gap: 6, color: 'var(--accent)' }}>
-                <Fire width={14} height={14} />
+                <Fire width={isMilestone ? 16 : 13} height={isMilestone ? 16 : 13} />
                 <span className="t-mono" style={{ fontSize: 13, fontWeight: 500 }}>{streak} day streak</span>
               </div>
             )}
@@ -287,6 +318,8 @@ export default function HomeScreen() {
             Edit plan
           </button>
         </div>
+
+        <BannerAd />
       </div>
     </div>
   );

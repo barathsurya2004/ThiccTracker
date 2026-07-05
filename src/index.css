@@ -373,3 +373,27 @@ textarea.field { resize: none; line-height: 1.45; }
 
 /* Hide scrollbars but allow scroll */
 .screen::-webkit-scrollbar { width: 0; height: 0; }
+
+/* Ad placeholders (AdSense-shaped, no real network wired up) */
+.ad-banner {
+  display: flex; align-items: center; justify-content: center;
+  height: 50px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px dashed var(--hairline);
+}
+.ad-modal {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in oklch, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+}
+.ad-modal-card {
+  width: 100%; max-width: 320px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+}

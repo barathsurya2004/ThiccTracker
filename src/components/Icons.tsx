@@ -27,3 +27,6 @@ export const Skip = (p: IconProps) => <svg {...base} strokeWidth={1.8} {...p}><p
 export const Arrow = (p: IconProps) => <svg {...base} strokeWidth={1.8} {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
 export const ArrowUp = (p: IconProps) => <svg {...base} strokeWidth={1.8} {...p}><path d="M7 14l5-5 5 5"/></svg>;
 export const User = (p: IconProps) => <svg {...base} {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>;
+export const Trophy = (p: IconProps) => <svg viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M7 3h10v2h3a1 1 0 0 1 1 1c0 3.5-2 6-5 6.6a5 5 0 0 1-2 2V17h2a2 2 0 0 1 2 2v1H6v-1a2 2 0 0 1 2-2h2v-2.4a5 5 0 0 1-2-2C5 9.9 3 7.5 3 4a1 1 0 0 1 1-1h3V3zm0 3H5.1c.3 2 1.5 3.5 3 4.2A7 7 0 0 1 7 8V6zm10 0v2c0 .4 0 .8-.1 1.2 1.5-.7 2.7-2.2 3-4.2H17z"/></svg>;
+export const Drag = (p: IconProps) => <svg {...base} strokeWidth={2} {...p}><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>;
+export const Share = (p: IconProps) => <svg {...base} {...p}><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.7l7.6-4.4M8.2 13.3l7.6 4.4"/></svg>;

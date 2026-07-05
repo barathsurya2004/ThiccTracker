@@ -24,10 +24,9 @@ function applyTheme(t: string) {
 }
 
 export default function SettingsScreen() {
-  const { user, logout } = useApp();
+  const { user, logout, adsDisabled, setAdsDisabled, notifPrefs, setNotifPrefs } = useApp();
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [activeAccent, setActiveAccent] = useState(() => localStorage.getItem('accent-name') || 'Lime');
-  const [notif, setNotif] = useState({ workouts: true, deload: true, weekly: false });
   const [units, setUnits] = useState('kg');
 
   useEffect(() => {
@@ -132,7 +131,7 @@ export default function SettingsScreen() {
                   <div className="t-body" style={{ fontWeight: 500 }}>{item.title}</div>
                   <div className="t-small dim">{item.sub}</div>
                 </div>
-                <ToggleSwitch on={notif[item.key]} onChange={(v) => setNotif(n => ({ ...n, [item.key]: v }))} />
+                <ToggleSwitch on={notifPrefs[item.key]} onChange={(v) => setNotifPrefs(n => ({ ...n, [item.key]: v }))} />
               </div>
             ))}
           </div>
@@ -154,6 +153,19 @@ export default function SettingsScreen() {
             <SettingsRow title="Export data" sub="CSV of all sessions" right={<Chev width={16} height={16} className="dim" />} />
             <SettingsRow title="Help & support" right={<Chev width={16} height={16} className="dim" />} />
             <SettingsRow danger title="Log out" onClick={logout} />
+          </div>
+        </div>
+
+        <div>
+          <div className="t-caps" style={{ marginBottom: 10 }}>Advanced</div>
+          <div className="card" style={{ padding: 0 }}>
+            <div className="row-item">
+              <div className="col" style={{ flex: 1 }}>
+                <div className="t-body" style={{ fontWeight: 500 }}>Disable ads</div>
+                <div className="t-small dim">Dev toggle — hides all ad placeholders</div>
+              </div>
+              <ToggleSwitch on={adsDisabled} onChange={setAdsDisabled} />
+            </div>
           </div>
         </div>
 

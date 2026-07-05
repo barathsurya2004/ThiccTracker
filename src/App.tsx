@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import TabBar from './components/TabBar';
+import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
+import QuickSetupScreen from './screens/QuickSetupScreen';
 import HomeScreen from './screens/HomeScreen';
 import PlanScreen from './screens/PlanScreen';
 import WorkoutScreen from './screens/WorkoutScreen';
@@ -26,7 +28,9 @@ function Root() {
   }, []);
 
   const renderScreen = () => {
+    if (screen === 'onboarding' && !isAuthed) return <OnboardingScreen />;
     if (!isAuthed || screen === 'login') return <LoginScreen />;
+    if (screen === 'quickSetup') return <QuickSetupScreen />;
     switch (screen) {
       case 'home':      return <HomeScreen />;
       case 'plan':      return <PlanScreen />;
@@ -37,7 +41,7 @@ function Root() {
     }
   };
 
-  const showTabs = isAuthed && screen !== 'login';
+  const showTabs = isAuthed && screen !== 'login' && screen !== 'onboarding' && screen !== 'quickSetup';
 
   return (
     <div className="app">

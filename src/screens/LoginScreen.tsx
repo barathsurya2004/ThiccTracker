@@ -6,7 +6,7 @@ import { Bolt, Arrow } from '../components/Icons';
 interface Creds { email: string; password: string; name: string; }
 
 export default function LoginScreen() {
-  const { login } = useApp();
+  const { login, loginGuest } = useApp();
   const [mode, setMode] = useState<'signin' | 'signup'>(() => {
     const existing = load<Creds | null>(KEYS.credentials, null);
     return existing ? 'signin' : 'signup';
@@ -46,7 +46,7 @@ export default function LoginScreen() {
         }
         const creds: Creds = { email: email.trim(), password, name: name.trim() };
         save(KEYS.credentials, creds);
-        login({ name: name.trim(), email: email.trim(), avatar: null });
+        login({ name: name.trim(), email: email.trim(), avatar: null }, true);
       } else {
         const stored = load<Creds | null>(KEYS.credentials, null);
         if (!stored) {
@@ -119,6 +119,10 @@ export default function LoginScreen() {
             {!loading && <Arrow width={16} height={16} />}
           </button>
         </form>
+
+        <button className="btn ghost" style={{ marginTop: 12 }} onClick={loginGuest}>
+          Continue without account
+        </button>
 
         <div className="t-small" style={{ marginTop: 24, textAlign: 'center', color: 'var(--text-3)' }}>
           Your data stays on this device.

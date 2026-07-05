@@ -1,9 +1,70 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp, todayStr } from '../context/AppContext';
-import type { ExerciseLog } from '../context/AppContext';
+import type { ExerciseLog, Exercise } from '../context/AppContext';
+import { getPRForExercise } from '../utils/progress';
 import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
-import { Play, Check, Close, Arrow, Rest, ArrowUp, Chart, Plus } from '../components/Icons';
+import TutorialOverlay from '../components/TutorialOverlay';
+import type { TutorialStep } from '../components/TutorialOverlay';
+import { InterstitialGate } from '../components/AdSlot';
+import { Play, Check, Close, Arrow, Rest, ArrowUp, Chart, Plus, Trophy, Drag, Share } from '../components/Icons';
+
+/* ── Reorder sheet: reorder upcoming exercises with up/down arrows, session-local only ── */
+function ReorderSheet({ locked, movable, onConfirm, onClose }: {
+  locked: Exercise[]; movable: Exercise[];
+  onConfirm: (next: Exercise[]) => void; onClose: () => void;
+}) {
+  const [list, setList] = useState(movable);
+
+  const move = (i: number, dir: -1 | 1) => {
+    const target = i + dir;
+    if (target < 0 || target >= list.length) return;
+    setList(l => {
+      const next = [...l];
+      [next[i], next[target]] = [next[target], next[i]];
+      return next;
+    });
+  };
+
+  return (
+    <div className="ad-modal enter" style={{ alignItems: 'flex-end' }}>
+      <div className="card" style={{ width: '100%', maxWidth: 420, padding: 0, maxHeight: '70vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="t-h3" style={{ padding: '16px 16px 8px' }}>Reorder exercises</div>
+        <div className="t-small dim" style={{ padding: '0 16px 8px' }}>Completed and current exercises stay locked in place.</div>
+        <div style={{ overflowY: 'auto', flex: 1 }}>
+          {locked.map((lex, i) => (
+            <div key={`locked-${i}`} className="row-item" style={{ opacity: 0.5 }}>
+              <div className="col" style={{ flex: 1 }}>
+                <div className="t-body">{lex.name}</div>
+                <div className="t-small dim">{i === locked.length - 1 ? 'Current' : 'Done'}</div>
+              </div>
+            </div>
+          ))}
+          {list.map((lex, i) => (
+            <div key={lex.name + i} className="row-item">
+              <div className="col" style={{ flex: 1, minWidth: 0 }}>
+                <div className="t-body" style={{ fontWeight: 500 }}>{lex.name}</div>
+                <div className="t-small dim t-mono">{lex.sets}×{lex.reps}</div>
+              </div>
+              <div className="row" style={{ gap: 4, flexShrink: 0 }}>
+                <button className="btn icon ghost" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">
+                  <ArrowUp width={14} height={14} />
+                </button>
+                <button className="btn icon ghost" onClick={() => move(i, 1)} disabled={i === list.length - 1} aria-label="Move down">
+                  <ArrowUp width={14} height={14} style={{ transform: 'rotate(180deg)' }} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="row" style={{ padding: 16, gap: 8, borderTop: '1px solid var(--hairline)' }}>
+          <button className="btn" onClick={onClose}>Cancel</button>
+          <button className="btn primary" onClick={() => onConfirm([...locked, ...list])}>Confirm order</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ── Circular timer ── */
 function CircularTimer({ remaining, total, size = 240 }: { remaining: number; total: number; size?: number }) {
@@ -85,7 +146,7 @@ function SummaryStat({ label, value, unit }: { label: string; value: string; uni
 interface ActiveSet { exIdx: number; setIdx: number; weight: number; reps: number; }
 
 export default function WorkoutScreen() {
-  const { todayWorkout, setScreen, workoutHistory, saveWorkout, activePlan } = useApp();
+  const { todayWorkout, setScreen, workoutHistory, saveWorkout, activePlan, hasSeenWorkoutTutorial, setHasSeenWorkoutTutorial } = useApp();
   const [phase, setPhase] = useState<'overview' | 'active' | 'rest' | 'done'>('overview');
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0);
@@ -93,15 +154,49 @@ export default function WorkoutScreen() {
   const [completedSets, setCompletedSets] = useState<ActiveSet[]>([]);
   const [weight, setWeight] = useState(60);
   const [reps, setReps] = useState(8);
+  const [sessionMaxWeightForEx, setSessionMaxWeightForEx] = useState(-1);
+  const [showPrBanner, setShowPrBanner] = useState(false);
+  const [prExName, setPrExName] = useState('');
+  const [prExWeight, setPrExWeight] = useState(0);
+  const [sessionExercises, setSessionExercises] = useState<Exercise[] | null>(null);
+  const [showReorderSheet, setShowReorderSheet] = useState(false);
+  const [doneInterstitialPassed, setDoneInterstitialPassed] = useState(false);
   const startedAt = useRef<number | null>(null);
   const restEndsAt = useRef<number | null>(null);
   const restTotal = useRef<number>(60);
 
-  const exercises = todayWorkout?.exercises || [];
+  const progressRef = useRef<HTMLDivElement>(null);
+  const exerciseTitleRef = useRef<HTMLDivElement>(null);
+  const setTrackerRef = useRef<HTMLDivElement>(null);
+  const stepperRowRef = useRef<HTMLDivElement>(null);
+  const completeBtnRef = useRef<HTMLButtonElement>(null);
+  const reorderBtnRef = useRef<HTMLButtonElement>(null);
+
+  const exercises = sessionExercises ?? (todayWorkout?.exercises || []);
   const ex = exercises[exIdx];
   const totalSets = ex?.sets || 0;
   const isLastSet = setIdx + 1 >= totalSets;
   const isLastEx = exIdx + 1 >= exercises.length;
+  const showTutorial = !hasSeenWorkoutTutorial && phase === 'active';
+
+  const tutorialSteps: TutorialStep[] = [
+    { title: 'Progress', description: 'Tracks how many sets you’ve finished across the whole workout.', targetRef: progressRef },
+    { title: 'Current exercise', description: 'Shows which exercise you’re on and how many are left.', targetRef: exerciseTitleRef },
+    { title: 'Set tracker', description: 'Each pill is one set. Filled pills are done, the outlined one is next.', targetRef: setTrackerRef },
+    { title: 'Weight & reps', description: 'Adjust what you actually lifted before logging the set.', targetRef: stepperRowRef },
+    { title: 'Complete set', description: 'Logs the set and starts your rest timer.', targetRef: completeBtnRef },
+    { title: 'Reorder', description: 'Not feeling an exercise? Use the arrows to move upcoming ones into a new order.', targetRef: reorderBtnRef },
+  ];
+
+  /* Reset per-exercise PR tracking when moving to a new exercise */
+  useEffect(() => { setSessionMaxWeightForEx(-1); }, [exIdx]);
+
+  /* Auto-dismiss PR banner */
+  useEffect(() => {
+    if (!showPrBanner) return;
+    const t = setTimeout(() => setShowPrBanner(false), 4000);
+    return () => clearTimeout(t);
+  }, [showPrBanner]);
 
   /* Tick: compute remaining from wall-clock diff so backgrounding doesn't freeze it */
   useEffect(() => {
@@ -131,12 +226,28 @@ export default function WorkoutScreen() {
     startedAt.current = Date.now();
     setPhase('active');
     setExIdx(0); setSetIdx(0);
+    setSessionExercises(todayWorkout ? [...todayWorkout.exercises] : null);
+    setDoneInterstitialPassed(false);
     const firstName = exercises[0]?.name?.toLowerCase() || '';
     setWeight(firstName.includes('squat') ? 80 : firstName.includes('deadlift') ? 120 : 60);
     setReps(8);
   };
 
+  /* Reordering only touches exercises after the current one — nothing already logged moves */
+  const confirmReorder = (next: Exercise[]) => {
+    setSessionExercises(next);
+    setShowReorderSheet(false);
+  };
+
   const completeSet = () => {
+    const historicalPr = getPRForExercise(ex.name, workoutHistory);
+    const baseline = Math.max(historicalPr ?? -1, sessionMaxWeightForEx);
+    if (weight > baseline) {
+      setSessionMaxWeightForEx(weight);
+      setShowPrBanner(true);
+      setPrExName(ex.name);
+      setPrExWeight(weight);
+    }
     setCompletedSets(s => [...s, { exIdx, setIdx, weight, reps }]);
     if (isLastSet && isLastEx) {
       setPhase('done');
@@ -309,12 +420,22 @@ export default function WorkoutScreen() {
     const nextEx = isLastSet ? exercises[exIdx + 1] : null;
 
     return (
-      <div className="screen no-tab" style={{ background: 'var(--bg-2)', paddingTop: 54, paddingBottom: 24, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '12px 20px' }}>
+      <div className="screen no-tab" style={{ background: 'var(--bg-2)', paddingTop: 54, paddingBottom: 24, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        {showPrBanner && (
+          <div style={{ position: 'absolute', top: 54, left: 20, right: 20, zIndex: 30, display: 'flex', justifyContent: 'center' }}>
+            <div className="pill solid-accent enter" style={{ gap: 8, padding: '8px 16px' }}>
+              <Trophy width={14} height={14} />
+              <span>New PR! {prExWeight}kg</span>
+            </div>
+          </div>
+        )}
+        <div style={{ padding: '12px 20px' }} ref={progressRef}>
           <div className="between">
             <button className="btn icon" onClick={() => setPhase('overview')}><Close width={16} height={16} /></button>
             <div className="t-mono t-small dim">{setsDoneTotal} / {totalSetsAll} sets</div>
-            <div style={{ width: 36 }} />
+            <button className="btn icon" ref={reorderBtnRef} onClick={() => setShowReorderSheet(true)} aria-label="Reorder exercises" disabled={exIdx + 1 >= exercises.length}>
+              <Drag width={16} height={16} />
+            </button>
           </div>
           <div style={{ marginTop: 14, height: 4, borderRadius: 4, background: 'var(--surface-2)', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${progress * 100}%`, background: 'var(--accent)', transition: 'width 0.4s ease' }} />
@@ -322,12 +443,12 @@ export default function WorkoutScreen() {
         </div>
 
         <div style={{ flex: 1, padding: '8px 20px', display: 'flex', flexDirection: 'column', gap: 18, overflowY: 'auto' }}>
-          <div className="enter">
+          <div className="enter" ref={exerciseTitleRef}>
             <div className="t-caps">Exercise {exIdx + 1} of {exercises.length}</div>
             <div className="t-h1" style={{ marginTop: 8, fontSize: 30, lineHeight: 1.05 }}>{ex.name}</div>
           </div>
 
-          <div className="row" style={{ gap: 6 }}>
+          <div className="row" style={{ gap: 6 }} ref={setTrackerRef}>
             {Array.from({ length: totalSets }).map((_, i) => (
               <div key={i} style={{
                 flex: 1, height: 8, borderRadius: 4,
@@ -349,7 +470,7 @@ export default function WorkoutScreen() {
             </div>
           </div>
 
-          <div className="row" style={{ gap: 12 }}>
+          <div className="row" style={{ gap: 12 }} ref={stepperRowRef}>
             <NumberStepper label="Weight" value={weight} unit="kg" step={2.5} onChange={setWeight} />
             <NumberStepper label="Reps done" value={reps} unit="" step={1} onChange={setReps} />
           </div>
@@ -370,11 +491,24 @@ export default function WorkoutScreen() {
         </div>
 
         <div style={{ padding: '12px 20px 0' }}>
-          <button className="btn primary" style={{ padding: '20px' }} onClick={completeSet}>
+          <button className="btn primary" style={{ padding: '20px' }} onClick={completeSet} ref={completeBtnRef}>
             <Check width={18} height={18} />
             Set complete
           </button>
         </div>
+
+        {showReorderSheet && (
+          <ReorderSheet
+            locked={exercises.slice(0, exIdx + 1)}
+            movable={exercises.slice(exIdx + 1)}
+            onConfirm={confirmReorder}
+            onClose={() => setShowReorderSheet(false)}
+          />
+        )}
+
+        {showTutorial && !showReorderSheet && (
+          <TutorialOverlay steps={tutorialSteps} onDone={() => setHasSeenWorkoutTutorial(true)} />
+        )}
       </div>
     );
   }
@@ -420,6 +554,10 @@ export default function WorkoutScreen() {
 
   /* ── Done ── */
   if (phase === 'done') {
+    if (!doneInterstitialPassed) {
+      return <InterstitialGate title="Your workout is saved." onDone={() => setDoneInterstitialPassed(true)} />;
+    }
+
     const durationMin = startedAt.current ? Math.max(1, Math.round((Date.now() - startedAt.current) / 60000)) : 1;
     const totalReps = completedSets.reduce((a,s) => a + s.reps, 0);
     const totalVolume = completedSets.reduce((a,s) => a + s.weight * s.reps, 0);
@@ -430,6 +568,69 @@ export default function WorkoutScreen() {
       ...workoutHistory.filter(e => !e.isRestDay).slice(0, 6).reverse().map(e => e.totalVolume / 1000),
       totalVolume / 1000,
     ];
+
+    const shareWorkout = async () => {
+      await document.fonts.ready.catch(() => {});
+      const w = 640, h = 640;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#1a1d1f');
+      grad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.fillStyle = '#c8e84a';
+      ctx.font = '600 30px "Space Grotesk", sans-serif';
+      ctx.fillText('TONNAGE.', 40, 70);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '600 13px "Space Grotesk", sans-serif';
+      ctx.fillText('WORKOUT COMPLETE', 40, 100);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 38px "Space Grotesk", sans-serif';
+      ctx.fillText(todayWorkout?.name || 'Workout', 40, 170);
+
+      let y = 230;
+      ctx.font = '500 22px "Space Grotesk", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      if (totalVolume > 0) { ctx.fillText(`${totalVolume.toLocaleString()} kg lifted`, 40, y); y += 38; }
+      ctx.fillText(`${durationMin} min · ${completedSets.length} sets`, 40, y);
+      y += 50;
+
+      if (prExName) {
+        ctx.fillStyle = '#c8e84a';
+        ctx.font = '600 22px "Space Grotesk", sans-serif';
+        ctx.fillText(`\u{1F3C6} New PR: ${prExName} · ${prExWeight}kg`, 40, y);
+      }
+
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '500 14px "Space Grotesk", sans-serif';
+      ctx.fillText('tonnage.app', 40, h - 36);
+
+      const blob: Blob | null = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) return;
+      const shareText = 'Track yours → tonnage.app';
+      const file = new File([blob], 'tonnage-workout.png', { type: 'image/png' });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], text: shareText, title: 'Tonnage workout' });
+          return;
+        } catch {
+          // user cancelled or unsupported — fall through to download
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'tonnage-workout.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
 
     return (
       <div className="screen no-tab">
@@ -449,6 +650,15 @@ export default function WorkoutScreen() {
             <SummaryStat label="Sets done" value={`${completedSets.length}`} unit={`/ ${totalSetsAll}`} />
             <SummaryStat label="Total reps" value={String(totalReps)} />
           </div>
+
+          {prExName && (
+            <div className="card" style={{ padding: 16, textAlign: 'center', borderColor: 'color-mix(in oklch, var(--accent) 30%, var(--hairline))' }}>
+              <Trophy width={28} height={28} style={{ color: 'var(--accent)' }} />
+              <div className="t-caps" style={{ marginTop: 8 }}>New personal record</div>
+              <div className="t-h3" style={{ marginTop: 4 }}>{prExName}</div>
+              <div className="t-mono" style={{ fontSize: 20, marginTop: 2 }}>{prExWeight}kg</div>
+            </div>
+          )}
 
           {completedSets.length > 0 && (
             <div>
@@ -486,6 +696,11 @@ export default function WorkoutScreen() {
               <div className="t-small dim" style={{ marginTop: 6 }}>Last {volumeTrend.length} sessions, ×1000 kg</div>
             </div>
           )}
+
+          <button className="btn ghost" onClick={shareWorkout}>
+            <Share width={14} height={14} />
+            Share workout
+          </button>
 
           <div className="row" style={{ gap: 8 }}>
             <button className="btn" onClick={finishAndGoHome}>Done</button>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp, last28Days, weekDates } from '../context/AppContext';
 import { MUSCLE_GROUPS, MEV_MRV, computeWeeklyMuscleVolume } from '../utils/muscleMap';
+import { BannerAd } from '../components/AdSlot';
 import TopNav from '../components/TopNav';
 import ModalityIcon from '../components/ModalityIcon';
 import { ArrowUp, Fire, Chev, Chart } from '../components/Icons';
@@ -516,6 +517,7 @@ export default function DashboardScreen() {
           </div>
         )}
 
+        <BannerAd />
       </div>
     </div>
   );
